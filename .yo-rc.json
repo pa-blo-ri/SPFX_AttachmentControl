@@ -1,0 +1,16 @@
+{
+  "@microsoft/generator-sharepoint": {
+    "plusBeta": false,
+    "isCreatingSolution": true,
+    "version": "1.15.0",
+    "libraryName": "sdge-webparts-attachments",
+    "libraryId": "f19cc110-014e-42d7-9d53-b8676be8a210",
+    "environment": "spo",
+    "packageManager": "npm",
+    "solutionName": "SDGE.Webparts.Attachments",
+    "solutionShortDescription": "SDGE.Webparts.Attachments description",
+    "skipFeatureDeployment": true,
+    "isDomainIsolated": false,
+    "componentType": "webpart"
+  }
+}

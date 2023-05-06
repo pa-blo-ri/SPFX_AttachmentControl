@@ -1,0 +1,40 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/spfx-build/package-solution.schema.json",
+  "solution": {
+    "name": "sdge-webparts-attachments-client-side-solution",
+    "id": "f19cc110-014e-42d7-9d53-b8676be8a210",
+    "version": "1.0.0.0",
+    "includeClientSideAssets": true,
+    "skipFeatureDeployment": true,
+    "isDomainIsolated": false,
+    "developer": {
+      "name": "",
+      "websiteUrl": "",
+      "privacyUrl": "",
+      "termsOfUseUrl": "",
+      "mpnId": "Undefined-1.15.0"
+    },
+    "metadata": {
+      "shortDescription": {
+        "default": "SDGE.Webparts.Attachments description"
+      },
+      "longDescription": {
+        "default": "SDGE.Webparts.Attachments description"
+      },
+      "screenshotPaths": [],
+      "videoUrl": "",
+      "categories": []
+    },
+    "features": [
+      {
+        "title": "sdge-webparts-attachments Feature",
+        "description": "The feature that activates elements of the sdge-webparts-attachments solution.",
+        "id": "601b193e-5b59-431b-b471-a310dacc5d7d",
+        "version": "1.0.0.0"
+      }
+    ]
+  },
+  "paths": {
+    "zippedPackage": "solution/sdge-webparts-attachments.sppkg"
+  }
+}
