@@ -31,21 +31,35 @@ export default class AttachmentsControl extends React.Component<IAttachmentsCont
   }
 
   public render(): React.ReactElement<IAttachmentsControlProps> {
+    
+    let buttonDisabled = true;
+    const attachs = (e) => this.props.max_file_size <= (e.size / 1e+6)
+    console.log("v102");
+    console.log("property size 1: " + this.props.max_file_size);    
 
-    console.log("v88");
-    console.log(this.props.max_file_size);    
-    this.state.files.forEach(element => {
-      console.log(element.size / 1e+6);
-      console.log(this.props.max_file_size);
-      console.log(this.props.max_file_size <= (element.size / 1e+6))
-    });
+    console.log("any elements matching? :"+this.state.files.some(attachs));
+    console.log(this.state.files.length)
+    buttonDisabled = this.state.files.some(attachs) || this.state.files.length < 1
+
+    /*
+    this.state.files.forEach(element => { */
+    /*  console.log("element size: " + element.size / 1e+6);
+      console.log("property size: " + this.props.max_file_size);
+      console.log("element null: " + element == null);
+      console.log("element undefined: " + element == undefined);*/
+    /*  console.log(element.every(this.props.max_file_size <= (element.size / 1e+6)))
+      
+     if ( element.every(this.props.max_file_size <= (element.size / 1e+6))){
+      buttonDisabled = true;
+     }
+    });*/
     
     return (
       <div className={styles.attachmentsControl}>
         <FilePond
           files={this.state.files}
           allowMultiple={true}
-          maxFileSize={this.props.max_file_size}
+          maxFileSize={this.props.max_file_size * 1e+6}
           maxFiles={this.props.max_files}
           labelIdle={this.props.input_text}
           onupdatefiles={fileItems => {
@@ -55,7 +69,7 @@ export default class AttachmentsControl extends React.Component<IAttachmentsCont
           }}
         />
         <br />
-        <PrimaryButton text={this.props.button_text} onClick={this._uploadFiles} />
+        <PrimaryButton text={this.props.button_text} onClick={this._uploadFiles} disabled={buttonDisabled}/>
       </div>
     );
   }

@@ -71,7 +71,7 @@ export default class AttachmentsControlWebPart extends BaseClientSideWebPart<IAt
                   key: 'listId'                  
                 }),
                 PropertyPaneTextField('max_file_size', {
-                  label: 'Max file size (ex 3MB)'
+                  label: 'Max file size (MB)'
                 }),
                 PropertyPaneTextField('max_files', {
                   label: 'Max files'
