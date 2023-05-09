@@ -31,29 +31,13 @@ export default class AttachmentsControl extends React.Component<IAttachmentsCont
   }
 
   public render(): React.ReactElement<IAttachmentsControlProps> {
-    
-    let buttonDisabled = true;
-    const attachs = (e) => this.props.max_file_size <= (e.size / 1e+6)
     console.log("v102");
-    console.log("property size 1: " + this.props.max_file_size);    
 
-    console.log("any elements matching? :"+this.state.files.some(attachs));
-    console.log(this.state.files.length)
-    buttonDisabled = this.state.files.some(attachs) || this.state.files.length < 1
+    let buttonDisabled = true;
+    const attachs = (e) => this.props.max_file_size <= (e.size / 1e+6);    
 
-    /*
-    this.state.files.forEach(element => { */
-    /*  console.log("element size: " + element.size / 1e+6);
-      console.log("property size: " + this.props.max_file_size);
-      console.log("element null: " + element == null);
-      console.log("element undefined: " + element == undefined);*/
-    /*  console.log(element.every(this.props.max_file_size <= (element.size / 1e+6)))
-      
-     if ( element.every(this.props.max_file_size <= (element.size / 1e+6))){
-      buttonDisabled = true;
-     }
-    });*/
-    
+    buttonDisabled = this.state.files.some(attachs) || this.state.files.length < 1;
+   
     return (
       <div className={styles.attachmentsControl}>
         <FilePond
@@ -76,9 +60,7 @@ export default class AttachmentsControl extends React.Component<IAttachmentsCont
 
   @autobind
   private async _uploadFiles() {
-
-    // try {
-   
+  
     let listName;
     const list = await sp.web.lists.getById(this.props.library.toString()).expand('RootFolder').select('Title,RootFolder/ServerRelativeUrl').get().then(function (result) {
       listName = result.Title
@@ -92,7 +74,6 @@ export default class AttachmentsControl extends React.Component<IAttachmentsCont
       try {
         if (file.size <= chunkFileSize) {
           try {
-            console.log("1");
 
             // small upload
             const newfile = await sp.web.getFolderByServerRelativeUrl(path).files.add(file.name, file, true);
@@ -102,7 +83,6 @@ export default class AttachmentsControl extends React.Component<IAttachmentsCont
           }
         } else {
           try {
-            console.log("2");
 
             //LOADING GIF CHAT GPT
             // large upload
@@ -120,13 +100,7 @@ export default class AttachmentsControl extends React.Component<IAttachmentsCont
       catch (e) {
         alert("An error has ocurred. Error status: " + e.status + " Description: " + e.statusText);
       }
-
     });
     this.setState({ files: [] });
-    // }
-    //  catch (e) {
-    //    alert("An error has ocurred. Error status: " + e.status + " Description: " + e.statusText)
-    //  }
-
   }
 }
