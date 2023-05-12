@@ -9,6 +9,7 @@
     "test": "gulp test"
   },
   "dependencies": {
+    "@material-ui/core": "^4.12.4",
     "@microsoft/sp-core-library": "1.15.0",
     "@microsoft/sp-lodash-subset": "1.15.0",
     "@microsoft/sp-office-ui-fabric-core": "1.15.0",

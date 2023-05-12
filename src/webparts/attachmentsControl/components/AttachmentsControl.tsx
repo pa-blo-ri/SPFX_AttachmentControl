@@ -26,6 +26,14 @@ import 'filepond/dist/filepond.min.css';
 
 //const [isLoading, setIsLoading] = useState(false);
 
+import Backdrop from '@material-ui/core/Backdrop';
+import CircularProgress from '@material-ui/core/CircularProgress';
+import Button from '@material-ui/core/Button';
+import { makeStyles, createStyles, Theme } from '@material-ui/core/styles';
+
+
+
+
 export default class AttachmentsControl extends React.Component<IAttachmentsControlProps, IAttachmentsControlState> {
   lib;
   constructor(props: IAttachmentsControlProps, state: IAttachmentsControlState) {
@@ -37,11 +45,21 @@ export default class AttachmentsControl extends React.Component<IAttachmentsCont
   }
 
   public render(): React.ReactElement<IAttachmentsControlProps> {
-    console.log("v125");
 
+    console.log("v130");
+
+    const useStyles = makeStyles((theme: Theme) =>
+      createStyles({
+        backdrop: {
+          zIndex: theme.zIndex.drawer + 1,
+          color: '#fff',
+        },
+      }),
+    );
+
+    const classes = useStyles();
     let buttonDisabled = true;
     const attachs = (e) => this.props.max_file_size <= (e.size / 1e+6);
-
     buttonDisabled = this.state.files.some(attachs) || this.state.files.length < 1;
 
     return (
@@ -60,11 +78,14 @@ export default class AttachmentsControl extends React.Component<IAttachmentsCont
         />
         <br />
         <PrimaryButton text={this.props.button_text} onClick={this._uploadFiles} disabled={buttonDisabled} />
-        
+
+        <Backdrop className={classes.backdrop} open>
+          <CircularProgress color="inherit" />
+        </Backdrop>
       </div>
     );
   }
-//<img src="${require<string>('../../assets/loading.png')}" alt="loading-spinner" />
+  //<img src="${require<string>('../../assets/loading.png')}" alt="loading-spinner" />
   @autobind
   private async _uploadFiles() {
 
@@ -98,7 +119,7 @@ export default class AttachmentsControl extends React.Component<IAttachmentsCont
             const newfile = await sp.web.getFolderByServerRelativeUrl(path).files.add(file.name, file, true);
             const item = await newfile.file.getItem();
             await item.update({
-              [ dataJSON.data[0].column ]: dataJSON.data[0].value
+              [dataJSON.data[0].column]: dataJSON.data[0].value
             });
           }
           catch (e) {
@@ -115,9 +136,9 @@ export default class AttachmentsControl extends React.Component<IAttachmentsCont
             }, true);
             const item = await newfile.file.getItem();
             await item.update({
-              [ dataJSON.data[0].column ]: dataJSON.data[0].value
+              [dataJSON.data[0].column]: dataJSON.data[0].value
             });
-          
+
             //LOADING GIF OFF
           }
           catch (e) {
