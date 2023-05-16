@@ -9,4 +9,5 @@ export interface IAttachmentsControlProps {
   button_text: string;
   hasTeamsContext: boolean;
   userDisplayName: string;
+  spinnerIsHidden: boolean;
 }

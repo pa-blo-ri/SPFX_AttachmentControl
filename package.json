@@ -9,7 +9,6 @@
     "test": "gulp test"
   },
   "dependencies": {
-    "@material-ui/core": "^4.12.4",
     "@microsoft/sp-core-library": "1.15.0",
     "@microsoft/sp-lodash-subset": "1.15.0",
     "@microsoft/sp-office-ui-fabric-core": "1.15.0",
@@ -40,6 +39,9 @@
     "@types/webpack-env": "~1.15.2",
     "ajv": "^6.12.5",
     "eslint-plugin-react-hooks": "4.3.0",
-    "gulp": "4.0.2"
-  }
+    "gulp": "^4.0.2"
+  },
+  "description": "Short summary on functionality and used technologies.",
+  "author": "",
+  "license": "ISC"
 }

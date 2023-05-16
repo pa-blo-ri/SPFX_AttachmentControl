@@ -19,7 +19,8 @@
       "input_text": "Drag & Drop your files",
       "button_text": "Upload",
       "max_files": null,
-      "max_file_size": null
+      "max_file_size": null,
+      "spinner_is_hidden": true
     }
   }]
 }

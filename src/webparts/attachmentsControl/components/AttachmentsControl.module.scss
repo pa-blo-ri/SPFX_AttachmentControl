@@ -10,6 +10,17 @@
   }
 }
 
+.loading-spinner-place{
+  background-color: rgba($color: #000000, $alpha: 0.5);
+}
+
+.loading-spinner{
+  position: absolute;
+  z-index: 6;
+  left: 47%;
+  top: 50%;
+}
+
 .welcome {
   text-align: center;
 }

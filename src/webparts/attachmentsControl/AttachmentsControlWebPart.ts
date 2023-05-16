@@ -36,7 +36,8 @@ export default class AttachmentsControlWebPart extends BaseClientSideWebPart<IAt
         input_text: this.properties.input_text,
         button_text: this.properties.button_text,
         hasTeamsContext: !!this.context.sdks.microsoftTeams,
-        userDisplayName: this.context.pageContext.user.displayName
+        userDisplayName: this.context.pageContext.user.displayName,
+        spinnerIsHidden: true
       }
     );
 
