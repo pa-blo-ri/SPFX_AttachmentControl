@@ -26,12 +26,13 @@ import 'filepond/dist/filepond.min.css';
 
 //const [isLoading, setIsLoading] = useState(false);
 
+/*
 import Backdrop from '@material-ui/core/Backdrop';
 import CircularProgress from '@material-ui/core/CircularProgress';
 import Button from '@material-ui/core/Button';
 import { makeStyles, createStyles, Theme } from '@material-ui/core/styles';
 
-
+*/
 
 
 export default class AttachmentsControl extends React.Component<IAttachmentsControlProps, IAttachmentsControlState> {
@@ -46,24 +47,57 @@ export default class AttachmentsControl extends React.Component<IAttachmentsCont
 
   public render(): React.ReactElement<IAttachmentsControlProps> {
 
-    console.log("v130");
-
-    const useStyles = makeStyles((theme: Theme) =>
-      createStyles({
-        backdrop: {
-          zIndex: theme.zIndex.drawer + 1,
-          color: '#fff',
-        },
-      }),
-    );
-
-    const classes = useStyles();
+    console.log("v131");
+    /*
+        const useStyles = makeStyles((theme: Theme) =>
+          createStyles({
+            backdrop: {
+              zIndex: theme.zIndex.drawer + 1,
+              color: '#fff',
+            },
+          }),
+        );
+    
+        const classes = useStyles();*/
     let buttonDisabled = true;
     const attachs = (e) => this.props.max_file_size <= (e.size / 1e+6);
     buttonDisabled = this.state.files.some(attachs) || this.state.files.length < 1;
 
     return (
       <div className={styles.attachmentsControl}>
+
+        <svg className={styles['loading-spinner']} width="38" height="38" viewBox="0 0 38 38" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient x1="8.042%" y1="0%" x2="65.682%" y2="23.865%" id="a">
+              <stop stop-color="#da2528" stop-opacity="0" offset="0%" />
+              <stop stop-color="#da2528" stop-opacity=".631" offset="63.146%" />
+              <stop stop-color="#da2528" offset="100%" />
+            </linearGradient>
+          </defs>
+          <g fill="none" fill-rule="evenodd">
+            <g transform="translate(1 1)">
+              <path d="M36 18c0-9.94-8.06-18-18-18" id="Oval-2" stroke="url(#a)" stroke-width="2">
+                <animateTransform
+                  attributeName="transform"
+                  type="rotate"
+                  from="0 18 18"
+                  to="360 18 18"
+                  dur="0.9s"
+                  repeatCount="indefinite" />
+              </path>
+              <circle fill="#da2528" cx="36" cy="18" r="1">
+                <animateTransform
+                  attributeName="transform"
+                  type="rotate"
+                  from="0 18 18"
+                  to="360 18 18"
+                  dur="0.9s"
+                  repeatCount="indefinite" />
+              </circle>
+            </g>
+          </g>
+        </svg>
+
         <FilePond
           files={this.state.files}
           allowMultiple={true}
@@ -76,15 +110,21 @@ export default class AttachmentsControl extends React.Component<IAttachmentsCont
             });
           }}
         />
-        <br />
         <PrimaryButton text={this.props.button_text} onClick={this._uploadFiles} disabled={buttonDisabled} />
+        <br />
+
+      </div>
+    );
+  }
+
+  /*
 
         <Backdrop className={classes.backdrop} open>
           <CircularProgress color="inherit" />
         </Backdrop>
-      </div>
-    );
-  }
+
+*/
+
   //<img src="${require<string>('../../assets/loading.png')}" alt="loading-spinner" />
   @autobind
   private async _uploadFiles() {
