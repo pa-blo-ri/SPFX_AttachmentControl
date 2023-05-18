@@ -1,15 +1,13 @@
 import * as React from 'react';
 import { useEffect, useState } from 'react';
 import styles from './AttachmentsControl.module.scss';
-import "./spinner.css";
 
 import { IAttachmentsControlProps } from './IAttachmentsControlProps';
 import { IAttachmentsControlState } from './IAttachmentsControlState';
 
-import { PrimaryButton } from 'office-ui-fabric-react';
+import { PrimaryButton, Spinner } from 'office-ui-fabric-react';
 import { autobind } from 'office-ui-fabric-react/lib/Utilities';
 
-import LoadingSpinner from './Spinner'
 
 import { sp } from "@pnp/sp/presets/all";
 import "@pnp/sp/webs";
@@ -24,80 +22,65 @@ import FilePondPluginFileValidateSize from 'filepond-plugin-file-validate-size';
 import 'filepond-plugin-image-preview/dist/filepond-plugin-image-preview.css';
 import 'filepond/dist/filepond.min.css';
 
-//const [isLoading, setIsLoading] = useState(false);
-
-/*
-import Backdrop from '@material-ui/core/Backdrop';
-import CircularProgress from '@material-ui/core/CircularProgress';
-import Button from '@material-ui/core/Button';
-import { makeStyles, createStyles, Theme } from '@material-ui/core/styles';
-
-*/
-
+let isOk = false;
 
 export default class AttachmentsControl extends React.Component<IAttachmentsControlProps, IAttachmentsControlState> {
+  
   lib;
   constructor(props: IAttachmentsControlProps, state: IAttachmentsControlState) {
     super(props);
     sp.setup({ spfxContext: this.props.context });
     this.state = ({ files: [] });
-    //    this.lib = this.props.library;
+
     registerPlugin(FilePondPluginImageExifOrientation, FilePondPluginImagePreview, FilePondPluginFileValidateSize);
   }
 
   public render(): React.ReactElement<IAttachmentsControlProps> {
 
-    console.log("v131");
-    /*
-        const useStyles = makeStyles((theme: Theme) =>
-          createStyles({
-            backdrop: {
-              zIndex: theme.zIndex.drawer + 1,
-              color: '#fff',
-            },
-          }),
-        );
-    
-        const classes = useStyles();*/
-    let buttonDisabled = true;
+
+
+    console.log("v156");
+
+
     const attachs = (e) => this.props.max_file_size <= (e.size / 1e+6);
-    buttonDisabled = this.state.files.some(attachs) || this.state.files.length < 1;
+    let buttonDisabled = this.state.files.some(attachs) || this.state.files.length < 1;
 
     return (
       <div className={styles.attachmentsControl}>
-
-        <svg className={styles['loading-spinner']} width="38" height="38" viewBox="0 0 38 38" xmlns="http://www.w3.org/2000/svg">
-          <defs>
-            <linearGradient x1="8.042%" y1="0%" x2="65.682%" y2="23.865%" id="a">
-              <stop stop-color="#da2528" stop-opacity="0" offset="0%" />
-              <stop stop-color="#da2528" stop-opacity=".631" offset="63.146%" />
-              <stop stop-color="#da2528" offset="100%" />
-            </linearGradient>
-          </defs>
-          <g fill="none" fill-rule="evenodd">
-            <g transform="translate(1 1)">
-              <path d="M36 18c0-9.94-8.06-18-18-18" id="Oval-2" stroke="url(#a)" stroke-width="2">
-                <animateTransform
-                  attributeName="transform"
-                  type="rotate"
-                  from="0 18 18"
-                  to="360 18 18"
-                  dur="0.9s"
-                  repeatCount="indefinite" />
-              </path>
-              <circle fill="#da2528" cx="36" cy="18" r="1">
-                <animateTransform
-                  attributeName="transform"
-                  type="rotate"
-                  from="0 18 18"
-                  to="360 18 18"
-                  dur="0.9s"
-                  repeatCount="indefinite" />
-              </circle>
+        <div className={styles['loading-spinner-place']} hidden={this.props.spinnerIsHidden}></div>
+        <div hidden={this.props.spinnerIsHidden}>
+          <svg className={styles['loading-spinner']} width="38" height="38" viewBox="0 0 38 38" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <linearGradient x1="8.042%" y1="0%" x2="65.682%" y2="23.865%" id="a">
+                <stop stop-color="#ab0707" stop-opacity="0" offset="0%" />
+                <stop stop-color="#ab0707" stop-opacity=".631" offset="63.146%" />
+                <stop stop-color="#ab0707" offset="100%" />
+              </linearGradient>
+            </defs>
+            <g fill="none" fill-rule="evenodd">
+              <g transform="translate(1 1)">
+                <path d="M36 18c0-9.94-8.06-18-18-18" id="Oval-2" stroke="url(#a)" stroke-width="2">
+                  <animateTransform
+                    attributeName="transform"
+                    type="rotate"
+                    from="0 18 18"
+                    to="360 18 18"
+                    dur="0.9s"
+                    repeatCount="indefinite" />
+                </path>
+                <circle fill="#ab0707" cx="36" cy="18" r="1">
+                  <animateTransform
+                    attributeName="transform"
+                    type="rotate"
+                    from="0 18 18"
+                    to="360 18 18"
+                    dur="0.9s"
+                    repeatCount="indefinite" />
+                </circle>
+              </g>
             </g>
-          </g>
-        </svg>
-
+          </svg>
+        </div>
         <FilePond
           files={this.state.files}
           allowMultiple={true}
@@ -117,15 +100,7 @@ export default class AttachmentsControl extends React.Component<IAttachmentsCont
     );
   }
 
-  /*
 
-        <Backdrop className={classes.backdrop} open>
-          <CircularProgress color="inherit" />
-        </Backdrop>
-
-*/
-
-  //<img src="${require<string>('../../assets/loading.png')}" alt="loading-spinner" />
   @autobind
   private async _uploadFiles() {
 
@@ -139,15 +114,21 @@ export default class AttachmentsControl extends React.Component<IAttachmentsCont
       }
     );
     const dataJSON = JSON.parse(dataStr);
-
+    const filesLength = this.state.files.length;
     let listName;
     const list = await sp.web.lists.getById(this.props.library.toString()).expand('RootFolder').select('Title,RootFolder/ServerRelativeUrl').get().then(function (result) {
       listName = result.Title
     });
 
+    const that = this;
+    console.log(isOk)
+
     const path = dataJSON.folder == '' ? `/sites/Desarrollo/${listName}/` : `/sites/Desarrollo/${listName}/${dataJSON.folder}`;
     const chunkFileSize = 10485760;
 
+    (this.props.spinnerIsHidden as boolean) = false;
+
+    let successItems = 0;
     this.state.files.forEach(async function (file, i) {
       // you can adjust this number to control what size files are uploaded in chunks
 
@@ -155,22 +136,23 @@ export default class AttachmentsControl extends React.Component<IAttachmentsCont
         if (file.size <= chunkFileSize) {
           try {
             // small upload
-            //     setIsLoading(true);
+            //            (this.props.spinnerIsHidden as boolean) = false;
             const newfile = await sp.web.getFolderByServerRelativeUrl(path).files.add(file.name, file, true);
             const item = await newfile.file.getItem();
             await item.update({
               [dataJSON.data[0].column]: dataJSON.data[0].value
             });
+            isOk = true;
           }
           catch (e) {
             alert("An error has ocurred. Error status: " + e.status + " Description: " + e.statusText);
           }
         } else {
           try {
-            //LOADING GIF CHAT GPT
+
 
             // large upload
-            //    setIsLoading(true);
+            //            this.spinnerIsHidden = false;
             const newfile = await sp.web.getFolderByServerRelativeUrl(path).files.addChunked(file.name, file, data => {
               console.log({ data });
             }, true);
@@ -178,8 +160,6 @@ export default class AttachmentsControl extends React.Component<IAttachmentsCont
             await item.update({
               [dataJSON.data[0].column]: dataJSON.data[0].value
             });
-
-            //LOADING GIF OFF
           }
           catch (e) {
             alert("An error has ocurred. Error status: " + e.status + " Description: " + e.statusText);
@@ -188,8 +168,10 @@ export default class AttachmentsControl extends React.Component<IAttachmentsCont
       }
       catch (e) {
         alert("An error has ocurred. Error status: " + e.status + " Description: " + e.statusText);
-      }
+      } 
     });
+    //(that.props.spinnerIsHidden as boolean) = true;
+    console.log(isOk)
     this.setState({ files: [] });
   }
 }

@@ -39,6 +39,9 @@
     "@types/webpack-env": "~1.15.2",
     "ajv": "^6.12.5",
     "eslint-plugin-react-hooks": "4.3.0",
-    "gulp": "4.0.2"
-  }
+    "gulp": "^4.0.2"
+  },
+  "description": "Short summary on functionality and used technologies.",
+  "author": "",
+  "license": "ISC"
 }
