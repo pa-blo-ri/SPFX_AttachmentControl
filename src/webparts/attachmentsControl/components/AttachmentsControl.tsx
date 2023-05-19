@@ -25,7 +25,7 @@ import 'filepond/dist/filepond.min.css';
 let isOk = false;
 
 export default class AttachmentsControl extends React.Component<IAttachmentsControlProps, IAttachmentsControlState> {
-  
+
   lib;
   constructor(props: IAttachmentsControlProps, state: IAttachmentsControlState) {
     super(props);
@@ -37,9 +37,7 @@ export default class AttachmentsControl extends React.Component<IAttachmentsCont
 
   public render(): React.ReactElement<IAttachmentsControlProps> {
 
-
-
-    console.log("v156");
+    console.log("v169");
 
 
     const attachs = (e) => this.props.max_file_size <= (e.size / 1e+6);
@@ -104,6 +102,7 @@ export default class AttachmentsControl extends React.Component<IAttachmentsCont
   @autobind
   private async _uploadFiles() {
 
+
     const dataStr = JSON.stringify(
       {
         folder: 'fotos de mi tia',
@@ -129,48 +128,65 @@ export default class AttachmentsControl extends React.Component<IAttachmentsCont
     (this.props.spinnerIsHidden as boolean) = false;
 
     let successItems = 0;
-    this.state.files.forEach(async function (file, i) {
-      // you can adjust this number to control what size files are uploaded in chunks
 
-      try {
-        if (file.size <= chunkFileSize) {
-          try {
-            // small upload
-            //            (this.props.spinnerIsHidden as boolean) = false;
-            const newfile = await sp.web.getFolderByServerRelativeUrl(path).files.add(file.name, file, true);
-            const item = await newfile.file.getItem();
-            await item.update({
-              [dataJSON.data[0].column]: dataJSON.data[0].value
-            });
-            isOk = true;
-          }
-          catch (e) {
-            alert("An error has ocurred. Error status: " + e.status + " Description: " + e.statusText);
-          }
-        } else {
-          try {
+   
+      this.state.files.forEach(async function (file, i) {
+        // you can adjust this number to control what size files are uploaded in chunks
 
+        try {
+          if (file.size <= chunkFileSize) {
+            try {
+              // small upload
+              //            (this.props.spinnerIsHidden as boolean) = false;
+              
+              const newfile = await sp.web.getFolderByServerRelativeUrl(path).files.add(file.name, file, true);
+              const item = await newfile.file.getItem();
+              await item.update({
+                [dataJSON.data[0].column]: dataJSON.data[0].value
+              });
 
-            // large upload
-            //            this.spinnerIsHidden = false;
-            const newfile = await sp.web.getFolderByServerRelativeUrl(path).files.addChunked(file.name, file, data => {
-              console.log({ data });
-            }, true);
-            const item = await newfile.file.getItem();
-            await item.update({
-              [dataJSON.data[0].column]: dataJSON.data[0].value
-            });
-          }
-          catch (e) {
-            alert("An error has ocurred. Error status: " + e.status + " Description: " + e.statusText);
+            }
+            catch (e) {
+              await sp.web.lists.getByTitle('log_s').items.add({
+                type: 'SDGE_AttachmentsControl',
+                code: String(e.status),
+                description: String(e.statusText)
+              });
+              alert("An error has ocurred. Error status: " + e.status + " Description: " + e.statusText);
+              console.error(e);              
+            }
+          } else {
+            try {
+
+              // large upload
+              const newfile = await sp.web.getFolderByServerRelativeUrl(path).files.addChunked(file.name, file, data => {
+                console.log({ data });
+              }, true);
+              const item = await newfile.file.getItem();
+              await item.update({
+                [dataJSON.data[0].column]: dataJSON.data[0].value
+              });
+            }
+            catch (e) {
+
+              alert("An error has ocurred. Error status: " + e.status + " Description: " + e.statusText);
+              console.error(e); 
+
+              await sp.web.lists.getByTitle('log_s').items.add({
+                type: 'SDGE_AttachmentsControl',
+                code: String(e.status),
+                description: String(e.statusText)
+              });
+              
+            }
           }
         }
-      }
-      catch (e) {
-        alert("An error has ocurred. Error status: " + e.status + " Description: " + e.statusText);
-      } 
-    });
-    //(that.props.spinnerIsHidden as boolean) = true;
+        catch (e) {
+          alert("An error has ocurred. Error status: " + e.status + " Description: " + e.statusText);
+        }
+        return isOk
+      });
+    (that.props.spinnerIsHidden as boolean) = true;
     console.log(isOk)
     this.setState({ files: [] });
   }
