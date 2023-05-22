@@ -22,7 +22,7 @@ import FilePondPluginFileValidateSize from 'filepond-plugin-file-validate-size';
 import 'filepond-plugin-image-preview/dist/filepond-plugin-image-preview.css';
 import 'filepond/dist/filepond.min.css';
 
-let isOk = false;
+
 
 export default class AttachmentsControl extends React.Component<IAttachmentsControlProps, IAttachmentsControlState> {
 
@@ -30,23 +30,24 @@ export default class AttachmentsControl extends React.Component<IAttachmentsCont
   constructor(props: IAttachmentsControlProps, state: IAttachmentsControlState) {
     super(props);
     sp.setup({ spfxContext: this.props.context });
-    this.state = ({ files: [] });
+    this.state = ({ files: [] , spiHidde: true});
 
     registerPlugin(FilePondPluginImageExifOrientation, FilePondPluginImagePreview, FilePondPluginFileValidateSize);
   }
 
   public render(): React.ReactElement<IAttachmentsControlProps> {
 
-    console.log("v177");
+    console.log("v197");
 
+    
 
     const attachs = (e) => this.props.max_file_size <= (e.size / 1e+6);
     let buttonDisabled = this.state.files.some(attachs) || this.state.files.length < 1;
 
     return (
       <div className={styles.attachmentsControl}>
-        <div className={styles['loading-spinner-place']} hidden={this.props.spinnerIsHidden}></div>
-        <div hidden={this.props.spinnerIsHidden}>
+        <div className={styles['loading-spinner-place']} hidden={this.state.spiHidde}></div>
+        <div hidden={this.state.spiHidde}>
           <svg className={styles['loading-spinner']} width="38" height="38" viewBox="0 0 38 38" xmlns="http://www.w3.org/2000/svg">
             <defs>
               <linearGradient x1="8.042%" y1="0%" x2="65.682%" y2="23.865%" id="a">
@@ -98,10 +99,10 @@ export default class AttachmentsControl extends React.Component<IAttachmentsCont
     );
   }
 
-
   @autobind
   private async _uploadFiles() {
 
+    this.setState({spiHidde: false});
 
     const dataStr = JSON.stringify(
       {
@@ -118,39 +119,24 @@ export default class AttachmentsControl extends React.Component<IAttachmentsCont
     const list = await sp.web.lists.getById(this.props.library.toString()).expand('RootFolder').select('Title,RootFolder/ServerRelativeUrl').get().then(function (result) {
       listName = result.Title
     });
-
-    const that = this;
-    console.log(isOk)
-
+  
     const path = dataJSON.folder == '' ? `/sites/Desarrollo/${listName}/` : `/sites/Desarrollo/${listName}/${dataJSON.folder}`;
     const chunkFileSize = 10485760;
-
-    (this.props.spinnerIsHidden as boolean) = false;
-
-    let test = 0;
-
-    const func = async () => {
-      
-    
+        
       this.state.files.forEach(async (file, i) => {
         // you can adjust this number to control what size files are uploaded in chunks
 
         try {
           if (file.size <= chunkFileSize) {
             try {
-              // small upload
-              //            (this.props.spinnerIsHidden as boolean) = false;
-
-              (this.props.spinnerIsHidden as boolean) = false;
+              // small upload              
               
               const newfile = await sp.web.getFolderByServerRelativeUrl(path).files.add(file.name, file, true);
               const item = await newfile.file.getItem();
               await item.update({
                 [dataJSON.data[0].column]: dataJSON.data[0].value
-              });
-              test = 1 ;
-              console.log("adentro");
-              console.log(test);
+              });              
+              this.setState({spiHidde: true});
             }
             catch (e) {
               await sp.web.lists.getByTitle('log_s').items.add({
@@ -159,7 +145,15 @@ export default class AttachmentsControl extends React.Component<IAttachmentsCont
                 description: String(e.statusText)
               });
               alert("An error has ocurred. Error status: " + e.status + " Description: " + e.statusText);
-              console.error(e);              
+              console.error(e);
+
+              await sp.web.lists.getByTitle('log_s').items.add({
+                type: 'SDGE_AttachmentsControl',
+                code: String(e.status),
+                description: String(e.statusText)
+              });
+              
+              this.setState({spiHidde: false});
             }
           } else {
             try {
@@ -172,6 +166,7 @@ export default class AttachmentsControl extends React.Component<IAttachmentsCont
               await item.update({
                 [dataJSON.data[0].column]: dataJSON.data[0].value
               });
+              this.setState({spiHidde: true});
             }
             catch (e) {
 
@@ -183,6 +178,8 @@ export default class AttachmentsControl extends React.Component<IAttachmentsCont
                 code: String(e.status),
                 description: String(e.statusText)
               });
+
+              this.setState({spiHidde: false});
               
             }
           }
@@ -190,12 +187,14 @@ export default class AttachmentsControl extends React.Component<IAttachmentsCont
         catch (e) {
           alert("An error has ocurred. Error status: " + e.status + " Description: " + e.statusText);
         }
-        return console.log("return: "+test)
       });
-      return test
-    }
-    (this.props.spinnerIsHidden as boolean) = true;
-    console.log("afuera: "+ await func())
-    this.setState({ files: [] });
+
+
+   this.setState({ files: [] });  
+  return  (this.props.spinnerIsHidden as boolean) = true; 
+
+   
   }
+
+  
 }
