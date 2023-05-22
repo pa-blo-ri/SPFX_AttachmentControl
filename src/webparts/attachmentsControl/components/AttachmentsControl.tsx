@@ -37,7 +37,7 @@ export default class AttachmentsControl extends React.Component<IAttachmentsCont
 
   public render(): React.ReactElement<IAttachmentsControlProps> {
 
-    console.log("v169");
+    console.log("v177");
 
 
     const attachs = (e) => this.props.max_file_size <= (e.size / 1e+6);
@@ -127,10 +127,12 @@ export default class AttachmentsControl extends React.Component<IAttachmentsCont
 
     (this.props.spinnerIsHidden as boolean) = false;
 
-    let successItems = 0;
+    let test = 0;
 
-   
-      this.state.files.forEach(async function (file, i) {
+    const func = async () => {
+      
+    
+      this.state.files.forEach(async (file, i) => {
         // you can adjust this number to control what size files are uploaded in chunks
 
         try {
@@ -138,13 +140,17 @@ export default class AttachmentsControl extends React.Component<IAttachmentsCont
             try {
               // small upload
               //            (this.props.spinnerIsHidden as boolean) = false;
+
+              (this.props.spinnerIsHidden as boolean) = false;
               
               const newfile = await sp.web.getFolderByServerRelativeUrl(path).files.add(file.name, file, true);
               const item = await newfile.file.getItem();
               await item.update({
                 [dataJSON.data[0].column]: dataJSON.data[0].value
               });
-
+              test = 1 ;
+              console.log("adentro");
+              console.log(test);
             }
             catch (e) {
               await sp.web.lists.getByTitle('log_s').items.add({
@@ -184,10 +190,12 @@ export default class AttachmentsControl extends React.Component<IAttachmentsCont
         catch (e) {
           alert("An error has ocurred. Error status: " + e.status + " Description: " + e.statusText);
         }
-        return isOk
+        return console.log("return: "+test)
       });
-    (that.props.spinnerIsHidden as boolean) = true;
-    console.log(isOk)
+      return test
+    }
+    (this.props.spinnerIsHidden as boolean) = true;
+    console.log("afuera: "+ await func())
     this.setState({ files: [] });
   }
 }
