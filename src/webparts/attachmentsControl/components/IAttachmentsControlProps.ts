@@ -6,8 +6,8 @@ export interface IAttachmentsControlProps {
   max_files: number;
   max_file_size: number;
   input_text: string;
+  input_text_success: string;
   button_text: string;
   hasTeamsContext: boolean;
   userDisplayName: string;
-  spinnerIsHidden: boolean;
 }

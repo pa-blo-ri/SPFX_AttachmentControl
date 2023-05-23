@@ -1,4 +1,5 @@
 export interface IAttachmentsControlState {
-    spiHidde: boolean;
+    textLabel: string;
+    spinnerIsHidden: boolean;
     files: any[];
   }

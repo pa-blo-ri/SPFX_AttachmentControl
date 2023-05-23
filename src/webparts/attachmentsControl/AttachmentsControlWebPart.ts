@@ -1,6 +1,5 @@
 import * as React from 'react';
 import * as ReactDom from 'react-dom';
-import { useState } from 'react';
 import { Version } from '@microsoft/sp-core-library';
 import { IPropertyPaneConfiguration, PropertyPaneTextField } from '@microsoft/sp-property-pane';
 import { PropertyFieldListPicker, PropertyFieldListPickerOrderBy } from '@pnp/spfx-property-controls/lib/PropertyFieldListPicker';
@@ -20,6 +19,7 @@ export interface IAttachmentsControlWebPartProps {
   max_file_size: number;
   max_files: number;
   input_text: string;
+  input_text_success: string;
   button_text: string;
   singleListFiltered: string;
 }
@@ -35,10 +35,10 @@ export default class AttachmentsControlWebPart extends BaseClientSideWebPart<IAt
         max_files: this.properties.max_files,
         max_file_size: this.properties.max_file_size,
         input_text: this.properties.input_text,
+        input_text_success: this.properties.input_text_success,
         button_text: this.properties.button_text,
         hasTeamsContext: !!this.context.sdks.microsoftTeams,
-        userDisplayName: this.context.pageContext.user.displayName,
-        spinnerIsHidden: true
+        userDisplayName: this.context.pageContext.user.displayName
       }
     );
 
@@ -80,6 +80,9 @@ export default class AttachmentsControlWebPart extends BaseClientSideWebPart<IAt
                 }),
                 PropertyPaneTextField('input_text', {
                   label: 'Input text'
+                }),
+                PropertyPaneTextField('input_text_success', {
+                  label: 'Input text success'
                 }),
                 PropertyPaneTextField('button_text', {
                   label: 'Button text'

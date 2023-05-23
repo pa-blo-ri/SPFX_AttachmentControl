@@ -17,10 +17,10 @@
     "properties": {
       "description": "AttachmentsControl",
       "input_text": "Drag & Drop your files",
+      "input_text_success": "Your files has been successfully uploaded",
       "button_text": "Upload",
       "max_files": null,
-      "max_file_size": null,
-      "spinner_is_hidden": true
+      "max_file_size": null
     }
   }]
 }

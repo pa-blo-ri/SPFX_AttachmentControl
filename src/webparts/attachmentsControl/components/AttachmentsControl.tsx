@@ -1,13 +1,11 @@
 import * as React from 'react';
-import { useEffect, useState } from 'react';
 import styles from './AttachmentsControl.module.scss';
 
 import { IAttachmentsControlProps } from './IAttachmentsControlProps';
 import { IAttachmentsControlState } from './IAttachmentsControlState';
 
-import { PrimaryButton, Spinner } from 'office-ui-fabric-react';
+import { PrimaryButton } from 'office-ui-fabric-react';
 import { autobind } from 'office-ui-fabric-react/lib/Utilities';
-
 
 import { sp } from "@pnp/sp/presets/all";
 import "@pnp/sp/webs";
@@ -21,33 +19,29 @@ import FilePondPluginImagePreview from 'filepond-plugin-image-preview';
 import FilePondPluginFileValidateSize from 'filepond-plugin-file-validate-size';
 import 'filepond-plugin-image-preview/dist/filepond-plugin-image-preview.css';
 import 'filepond/dist/filepond.min.css';
-
-
+import { template } from 'lodash';
 
 export default class AttachmentsControl extends React.Component<IAttachmentsControlProps, IAttachmentsControlState> {
 
-  lib;
   constructor(props: IAttachmentsControlProps, state: IAttachmentsControlState) {
     super(props);
     sp.setup({ spfxContext: this.props.context });
-    this.state = ({ files: [] , spiHidde: true});
+    this.state = ({ files: [], spinnerIsHidden: true, textLabel: this.props.input_text });
 
     registerPlugin(FilePondPluginImageExifOrientation, FilePondPluginImagePreview, FilePondPluginFileValidateSize);
   }
 
   public render(): React.ReactElement<IAttachmentsControlProps> {
 
-    console.log("v197");
-
-    
+    console.log("v227");
 
     const attachs = (e) => this.props.max_file_size <= (e.size / 1e+6);
-    let buttonDisabled = this.state.files.some(attachs) || this.state.files.length < 1;
+    let buttonIsHidden = this.state.files.some(attachs) || this.state.files.length < 1;
 
     return (
       <div className={styles.attachmentsControl}>
-        <div className={styles['loading-spinner-place']} hidden={this.state.spiHidde}></div>
-        <div hidden={this.state.spiHidde}>
+        <div className={styles['loading-spinner-place']} hidden={this.state.spinnerIsHidden}></div>
+        <div hidden={this.state.spinnerIsHidden}>
           <svg className={styles['loading-spinner']} width="38" height="38" viewBox="0 0 38 38" xmlns="http://www.w3.org/2000/svg">
             <defs>
               <linearGradient x1="8.042%" y1="0%" x2="65.682%" y2="23.865%" id="a">
@@ -85,16 +79,19 @@ export default class AttachmentsControl extends React.Component<IAttachmentsCont
           allowMultiple={true}
           maxFileSize={this.props.max_file_size * 1e+6}
           maxFiles={this.props.max_files}
-          labelIdle={this.props.input_text}
+          labelIdle={this.state.textLabel}
           onupdatefiles={fileItems => {
             this.setState({
               files: fileItems.map(fileItem => fileItem.file)
             });
           }}
         />
-        <PrimaryButton text={this.props.button_text} onClick={this._uploadFiles} disabled={buttonDisabled} />
+        <div hidden={buttonIsHidden}>
+          <div className={styles['button-place']} >
+            <PrimaryButton className={styles['primary-button']} text={this.props.button_text} onClick={this._uploadFiles} />
+          </div>
+        </div>
         <br />
-
       </div>
     );
   }
@@ -102,8 +99,30 @@ export default class AttachmentsControl extends React.Component<IAttachmentsCont
   @autobind
   private async _uploadFiles() {
 
-    this.setState({spiHidde: false});
+    this.setState({ spinnerIsHidden: false });
 
+    const success = () => {
+      this.setState({ spinnerIsHidden: true, textLabel: this.props.input_text_success });
+      setTimeout(() => {
+        this.setState({ textLabel: this.props.input_text });
+      }, 3000);
+    }
+
+    const  handleError = async (e) => {
+
+      alert("An error has ocurred. Error status: " + e.status + " Description: " + e.statusText);
+            console.error(e);
+
+            await sp.web.lists.getByTitle('log_s').items.add({
+              type: 'SDGE_AttachmentsControl',
+              code: String(e.status),
+              description: String(e.statusText)
+            });
+
+            this.setState({ spinnerIsHidden: false });
+    }
+
+//Cambiar este JSON que se lea desde un param y aplicarlo al resto del código, que pasa si viene vacio?
     const dataStr = JSON.stringify(
       {
         folder: 'fotos de mi tia',
@@ -113,88 +132,59 @@ export default class AttachmentsControl extends React.Component<IAttachmentsCont
         }]
       }
     );
+    
     const dataJSON = JSON.parse(dataStr);
     const filesLength = this.state.files.length;
     let listName;
     const list = await sp.web.lists.getById(this.props.library.toString()).expand('RootFolder').select('Title,RootFolder/ServerRelativeUrl').get().then(function (result) {
       listName = result.Title
     });
-  
+
     const path = dataJSON.folder == '' ? `/sites/Desarrollo/${listName}/` : `/sites/Desarrollo/${listName}/${dataJSON.folder}`;
     const chunkFileSize = 10485760;
-        
-      this.state.files.forEach(async (file, i) => {
-        // you can adjust this number to control what size files are uploaded in chunks
 
-        try {
-          if (file.size <= chunkFileSize) {
-            try {
-              // small upload              
-              
-              const newfile = await sp.web.getFolderByServerRelativeUrl(path).files.add(file.name, file, true);
-              const item = await newfile.file.getItem();
-              await item.update({
-                [dataJSON.data[0].column]: dataJSON.data[0].value
-              });              
-              this.setState({spiHidde: true});
-            }
-            catch (e) {
-              await sp.web.lists.getByTitle('log_s').items.add({
-                type: 'SDGE_AttachmentsControl',
-                code: String(e.status),
-                description: String(e.statusText)
-              });
-              alert("An error has ocurred. Error status: " + e.status + " Description: " + e.statusText);
-              console.error(e);
+    this.state.files.forEach(async (file, i) => {
+      // you can adjust this number to control what size files are uploaded in chunks
 
-              await sp.web.lists.getByTitle('log_s').items.add({
-                type: 'SDGE_AttachmentsControl',
-                code: String(e.status),
-                description: String(e.statusText)
-              });
-              
-              this.setState({spiHidde: false});
-            }
-          } else {
-            try {
+      try {
+        if (file.size <= chunkFileSize) {
+          try {
+            // small upload              
 
-              // large upload
-              const newfile = await sp.web.getFolderByServerRelativeUrl(path).files.addChunked(file.name, file, data => {
-                console.log({ data });
-              }, true);
-              const item = await newfile.file.getItem();
-              await item.update({
-                [dataJSON.data[0].column]: dataJSON.data[0].value
-              });
-              this.setState({spiHidde: true});
-            }
-            catch (e) {
+            const newfile = await sp.web.getFolderByServerRelativeUrl(path).files.add(file.name, file, true);
+            const item = await newfile.file.getItem();
+            await item.update({
+              [dataJSON.data[0].column]: dataJSON.data[0].value
+            });
+            success();
+          }
+          catch (e) {
+            handleError(e);
+          }
+        } else {
+          try {
 
-              alert("An error has ocurred. Error status: " + e.status + " Description: " + e.statusText);
-              console.error(e); 
-
-              await sp.web.lists.getByTitle('log_s').items.add({
-                type: 'SDGE_AttachmentsControl',
-                code: String(e.status),
-                description: String(e.statusText)
-              });
-
-              this.setState({spiHidde: false});
-              
-            }
+            // large upload
+            const newfile = await sp.web.getFolderByServerRelativeUrl(path).files.addChunked(file.name, file, data => {
+              console.log({ data });
+            }, true);
+            const item = await newfile.file.getItem();
+            await item.update({
+              [dataJSON.data[0].column]: dataJSON.data[0].value
+            });
+            success();
+          }
+          catch (e) {
+            handleError(e);
           }
         }
-        catch (e) {
-          alert("An error has ocurred. Error status: " + e.status + " Description: " + e.statusText);
-        }
-      });
+      }
+      catch (e) {
+        handleError(e);
+      }
+    });
 
-
-   this.setState({ files: [] });  
-  return  (this.props.spinnerIsHidden as boolean) = true; 
-
-   
+    this.setState({ files: [] });
   }
 
-  
 }
