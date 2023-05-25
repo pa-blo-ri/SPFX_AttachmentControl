@@ -124,7 +124,7 @@ export default class AttachmentsControl extends React.Component<IAttachmentsCont
               console.log(error.response);
               console.log(error.message);*/
               console.log(JSON.parse(error.message.split('::>')[1]));
-              console.log(JSON.parse(error.message.split('::>')[1])["odata.error"].message.value);
+              console.log(JSON.parse(error.message.split('::>')[1])["odata.error"].message.value); //this works, get the correct message
               throw alert(error);
             }
 
