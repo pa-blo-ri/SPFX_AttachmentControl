@@ -33,7 +33,19 @@ export default class AttachmentsControl extends React.Component<IAttachmentsCont
 
   public render(): React.ReactElement<IAttachmentsControlProps> {
 
-    console.log("v256");
+    console.log("v277");
+
+    //?meta={"folder": "fotos de mi tia","data": [{"column": "RefID","value":"10"}]}
+    const searchParams = new URLSearchParams(document.location.search);
+    const metaParam = JSON.parse( searchParams.get('meta') ) ?? {};
+
+    console.log(metaParam);
+    console.log(typeof metaParam);
+    console.log(metaParam['folder']);
+
+  //  console.log(searchParams.get('meta'));
+  //  console.log(searchParams.entries());
+
 
     const attachs = (e) => this.props.max_file_size <= (e.size / 1e+6);
     let buttonIsHidden = this.state.files.some(attachs) || this.state.files.length < 1;
@@ -99,42 +111,47 @@ export default class AttachmentsControl extends React.Component<IAttachmentsCont
   @autobind
   private async _uploadFiles() {
 
+    //Show loading spinner
     this.setState({ spinnerIsHidden: false });
 
+    //Will be executed in case the upload was successful
     const success = () => {
+
       this.setState({ spinnerIsHidden: true, textLabel: this.props.input_text_success });
       setTimeout(() => {
         this.setState({ textLabel: this.props.input_text });
       }, 3000);
+
     }
 
-    const handleError = async (error) => {
-
-      console.log("inside error 10");
-      this.setState({ spinnerIsHidden: false });
-      
-    //  console.error('Failed to GET: ' + error)
-            if (typeof error.response !== 'undefined' && typeof error.response.data !== 'undefined' && error.response.data !== null) {
-              console.log("inside error 11");
-              throw new Error(error.response.data)
-            } else {
-              console.log("inside error 12");
- /*             console.log(error);
-              console.log(typeof error);
-              console.log(error.response);
-              console.log(error.message);*/
-              console.log(JSON.parse(error.message.split('::>')[1]));
-              console.log(JSON.parse(error.message.split('::>')[1])["odata.error"].message.value); //this works, get the correct message
-              throw alert(error);
-            }
+    //Send log file in case an error has ocurred
+    const sendLog = async (code: string, description: string) => {
 
       await sp.web.lists.getByTitle('log_s').items.add({
         type: 'SDGE_AttachmentsControl',
-        code: String(error.status),
-        description: String(error.statusText)
+        code,
+        description
       });
 
-      
+    }
+
+    const handleError = async (error: any) => {
+
+      this.setState({ spinnerIsHidden: true });
+
+      if (typeof error.response !== 'undefined' && typeof error.response.data !== 'undefined' && error.response.data !== null) {
+
+        throw new Error(error.response.data);
+      } else {
+
+        let entireError = String(error);
+        let errorMessage = JSON.parse(error.message.split('::>')[1])["odata.error"].message.value;
+
+        alert(errorMessage);
+        sendLog(entireError, errorMessage);
+
+        throw error;
+      }
     }
 
     //Cambiar este JSON que se lea desde un param y aplicarlo al resto del código, que pasa si viene vacio?
@@ -163,58 +180,61 @@ export default class AttachmentsControl extends React.Component<IAttachmentsCont
     this.state.files.forEach(async (file, i) => {
       // you can adjust this number to control what size files are uploaded in chunks
       console.log("3");
-    //  try {
-        if (file.size <= chunkFileSize) {
-          try { 
-            console.log("4");
-            // small upload              
+      //  try {
+      if (file.size <= chunkFileSize) {
+        try {
+          console.log("4");
+          // small upload  
 
-            const newfile = await sp.web.getFolderByServerRelativeUrl(path).files.add(file.name, file, true);
-            console.log(newfile);
+          sendLog("code test", "description test");
 
-            console.log("5");
+          const newfile = await sp.web.getFolderByServerRelativeUrl(path).files.add(file.name, file, true);
+          console.log(newfile);
 
-            const item = await newfile.file.getItem();
+          console.log("5");
 
-            console.log("6");
+          const item = await newfile.file.getItem();
 
-            await item.update({
-              [dataJSON.data[0].column]: dataJSON.data[0].value
-            });
-            console.log("7");
-            success();
-            console.log("8");
-          }
+          console.log("6");
+
+          await item.update({
+            [dataJSON.data[0].column]: dataJSON.data[0].value
+          });
+          console.log("7");
+          success();
+          console.log("8");
+          //         
+        }
+        catch (error) {
+          console.log("inside error 9");
+          handleError(error);
+        }
+      } else {
+        try {
+
+          // large upload
+          const newfile = await sp.web.getFolderByServerRelativeUrl(path).files.addChunked(file.name, file, data => {
+            console.log({ data });
+          }, true);
+          const item = await newfile.file.getItem();
+          await item.update({
+            [dataJSON.data[0].column]: dataJSON.data[0].value
+          });
+          success();
+        }
+        catch (e) {
+          handleError(e);
+        }
+      }
+      /*    }
           catch (error) {
-            console.log("inside error 9");
-            handleError(error);
-          }
-        } else {
-          try {
-
-            // large upload
-            const newfile = await sp.web.getFolderByServerRelativeUrl(path).files.addChunked(file.name, file, data => {
-              console.log({ data });
-            }, true);
-            const item = await newfile.file.getItem();
-            await item.update({
-              [dataJSON.data[0].column]: dataJSON.data[0].value
-            });
-            success();
-          }
-          catch (e) {
-            handleError(e);
-          }
-        }
-  /*    }
-      catch (error) {
-        console.error('Failed to GET: ' + error)
-        if (typeof error.response !== 'undefined' && typeof error.response.data !== 'undefined' && error.response.data !== null) {
-          throw new Error(error.response.data)
-        } else {
-          throw error
-        }
-      }*/
+            console.error('Failed to GET: ' + error)
+            if (typeof error.response !== 'undefined' && typeof error.response.data !== 'undefined' && error.response.data !== null) {
+              throw new Error(error.response.data)
+            } else {
+              throw error
+            }
+          }*/
     });
 
     this.setState({ files: [] });
