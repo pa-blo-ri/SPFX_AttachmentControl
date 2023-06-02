@@ -1,7 +1,7 @@
 import * as React from 'react';
 import * as ReactDom from 'react-dom';
 import { Version } from '@microsoft/sp-core-library';
-import { IPropertyPaneConfiguration, PropertyPaneTextField } from '@microsoft/sp-property-pane';
+import { IPropertyPaneConfiguration, PropertyPaneTextField, PropertyPaneCheckbox, PropertyPaneLabel} from '@microsoft/sp-property-pane';
 import { PropertyFieldListPicker, PropertyFieldListPickerOrderBy } from '@pnp/spfx-property-controls/lib/PropertyFieldListPicker';
 
 import { BaseClientSideWebPart } from '@microsoft/sp-webpart-base';
@@ -22,6 +22,8 @@ export interface IAttachmentsControlWebPartProps {
   input_text_success: string;
   button_text: string;
   singleListFiltered: string;
+  useLog: boolean;
+  logs_folder: string | string [];
 }
 
 export default class AttachmentsControlWebPart extends BaseClientSideWebPart<IAttachmentsControlWebPartProps> {
@@ -38,7 +40,9 @@ export default class AttachmentsControlWebPart extends BaseClientSideWebPart<IAt
         input_text_success: this.properties.input_text_success,
         button_text: this.properties.button_text,
         hasTeamsContext: !!this.context.sdks.microsoftTeams,
-        userDisplayName: this.context.pageContext.user.displayName
+        userDisplayName: this.context.pageContext.user.displayName,
+        useLog: this.properties.useLog,
+        logs_folder: this.properties.logs_folder
       }
     );
 
@@ -86,6 +90,22 @@ export default class AttachmentsControlWebPart extends BaseClientSideWebPart<IAt
                 }),
                 PropertyPaneTextField('button_text', {
                   label: 'Button text'
+                }),
+                PropertyPaneLabel('', {
+                  text: 'Send log?'
+                }),
+                PropertyPaneCheckbox('useLog', {
+                }),                
+                PropertyFieldListPicker('logs_folder', {
+                  label: "Choose a folder to save logs within",
+                  selectedList: this.properties.logs_folder,
+                  orderBy: PropertyFieldListPickerOrderBy.Title,
+                  includeHidden: false,
+                  onPropertyChange: this.onPropertyPaneFieldChanged.bind(this),
+                  properties: this.properties,
+                  context: this.context,
+                  deferredValidationTime: 0,
+                  key: 'listIdLog'                  
                 })
               ]
             }

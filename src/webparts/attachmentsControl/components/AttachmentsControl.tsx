@@ -26,26 +26,27 @@ export default class AttachmentsControl extends React.Component<IAttachmentsCont
   constructor(props: IAttachmentsControlProps, state: IAttachmentsControlState) {
     super(props);
     sp.setup({ spfxContext: this.props.context });
-    this.state = ({ files: [], param:  JSON.parse( (new URLSearchParams(document.location.search)).get('meta') ) ?? {} , spinnerIsHidden: true, textLabel: this.props.input_text });
+    this.state = ({ files: [], param: JSON.parse((new URLSearchParams(document.location.search)).get('meta')) ?? {}, spinnerIsHidden: true, textLabel: this.props.input_text });
 
     registerPlugin(FilePondPluginImageExifOrientation, FilePondPluginImagePreview, FilePondPluginFileValidateSize);
   }
 
   public render(): React.ReactElement<IAttachmentsControlProps> {
 
-    console.log("v285");
+    console.log("v294");
+    console.log(this.props.useLog);
 
     //?meta={"folder": "fotos de mi tia","data": [{"column": "RefID","value":"10"}]}
-  //  const searchParams = new URLSearchParams(document.location.search);
-  //  const metaParam = JSON.parse( searchParams.get('meta') ) ?? {};
+    //  const searchParams = new URLSearchParams(document.location.search);
+    //  const metaParam = JSON.parse( searchParams.get('meta') ) ?? {};
 
     console.log(this.state.param);
     console.log(typeof this.state.param);
     console.log(Object.keys(this.state.param).length > 0 ? this.state.param['data'][0]['column'] : 'empty column');
     console.log(Object.keys(this.state.param).length > 0 ? this.state.param['data'][0]['value'] : 'empty value');
 
-  //  console.log(searchParams.get('meta'));
-  //  console.log(searchParams.entries());
+    //  console.log(searchParams.get('meta'));
+    //  console.log(searchParams.entries());
 
 
     const attachs = (e) => this.props.max_file_size <= (e.size / 1e+6);
@@ -156,15 +157,18 @@ export default class AttachmentsControl extends React.Component<IAttachmentsCont
     }
 
     //Cambiar este JSON que se lea desde un param y aplicarlo al resto del código, que pasa si viene vacio?
-    const dataStr = JSON.stringify(
-      {
-        folder: this.state.param['folder'],
-        data: [{
-          column: this.state.param['data'][0]['column'] ?? '',
-          value: this.state.param['data'][0]['value'] ?? ''
-        }]
-      }
-    );
+    const dataStr =
+      Object.keys(this.state.param).length > 0 ?
+        JSON.stringify(
+          {
+            folder: this.state.param['folder'],
+            data: [{
+              column: this.state.param['data'][0]['column'] ?? '',
+              value: this.state.param['data'][0]['value'] ?? ''
+            }]
+          }
+        ) : '';
+
 
     const dataJSON = JSON.parse(dataStr);
     const filesLength = this.state.files.length;
