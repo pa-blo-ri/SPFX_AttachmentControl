@@ -106,6 +106,12 @@ export default class AttachmentsControlWebPart extends BaseClientSideWebPart<IAt
                   context: this.context,
                   deferredValidationTime: 0,
                   key: 'listIdLog'                  
+                }),
+                PropertyPaneTextField('input_text_success', {
+                  label: 'Input text success'
+                }),
+                PropertyPaneTextField('input_text_success', {
+                  label: 'Input text success'
                 })
               ]
             }
