@@ -23,7 +23,7 @@ export interface IAttachmentsControlWebPartProps {
   button_text: string;
   singleListFiltered: string;
   useLog: boolean;
-  logs_folder: string | string [];
+  logs_folder: string | string []; //Stores de list ID to save log file
 }
 
 export default class AttachmentsControlWebPart extends BaseClientSideWebPart<IAttachmentsControlWebPartProps> {
@@ -105,13 +105,8 @@ export default class AttachmentsControlWebPart extends BaseClientSideWebPart<IAt
                   properties: this.properties,
                   context: this.context,
                   deferredValidationTime: 0,
-                  key: 'listIdLog'                  
-                }),
-                PropertyPaneTextField('input_text_success', {
-                  label: 'Input text success'
-                }),
-                PropertyPaneTextField('input_text_success', {
-                  label: 'Input text success'
+                  key: 'listIdLog',
+                  disabled: !this.properties.useLog                  
                 })
               ]
             }

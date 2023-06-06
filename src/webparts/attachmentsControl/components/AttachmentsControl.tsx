@@ -39,22 +39,11 @@ export default class AttachmentsControl extends React.Component<IAttachmentsCont
 
   public render(): React.ReactElement<IAttachmentsControlProps> {
 
-    console.log("v315");
-    console.log(this.props.logs_folder == '');
-
+    console.log("v321");
+    
+    //Param sintax sample
     //?meta={"folder": "fotos de mi tia","data": [{"column": "RefID","value":"10"}]}
-    //  const searchParams = new URLSearchParams(document.location.search);
-    //  const metaParam = JSON.parse( searchParams.get('meta') ) ?? {};
-
-    console.log(this.state.param);
-    console.log(typeof this.state.param);
-    console.log(Object.keys(this.state.param).length > 0 ? this.state.param['data'][0]['column'] : 'empty column');
-    console.log(Object.keys(this.state.param).length > 0 ? this.state.param['data'][0]['value'] : 'empty value');
-
-    //  console.log(searchParams.get('meta'));
-    //  console.log(searchParams.entries());
-
-
+  
     const attachs = (e) => this.props.max_file_size <= (e.size / 1e+6);
     let buttonIsHidden = this.state.files.some(attachs) || this.state.files.length < 1;
 
@@ -134,24 +123,38 @@ export default class AttachmentsControl extends React.Component<IAttachmentsCont
 
     //Send log file in case an error has ocurred
     const sendLog = async (code: string, description: string) => {
+      try {
 
-      if (this.props.useLog && this.props.logs_folder != '') {
+        if (this.props.useLog && this.props.logs_folder != '') {
 
-                let logList;
-                await sp.web.lists.getById(this.props.logs_folder.toString()).expand('RootFolder').select('Title,RootFolder/ServerRelativeUrl').get().then(function (result) {
-                  logList = result.Title
-                });
-        
-        await sp.web.lists.getByTitle('log_s').items.add({
-          type: 'SDGE_AttachmentsControl',
-          metaParam: Object.keys(this.state.param).length > 0 ? JSON.stringify(this.state.param) : 'Empty',
-          code,
-          description
-        });
+          let logList: string;
+          await sp.web.lists.getById(this.props.logs_folder.toString()).expand('RootFolder').select('Title,RootFolder/ServerRelativeUrl').get().then(function (result) {
+            logList = result.Title
+          });
 
+          await sp.web.lists.getByTitle(logList).items.add({
+            type: 'SDGE_AttachmentsControl',
+            metaParam: Object.keys(this.state.param).length > 0 ? JSON.stringify(this.state.param) : 'Empty',
+            code,
+            description
+          });
+        }
+      } catch (error) {
+        if ( typeof error.response !== 'undefined' && typeof error.response.data !== 'undefined' && error.response.data !== null ) {
+
+          throw new Error(error.response.data);
+
+        } else {
+
+          let errorMessage = JSON.parse(error.message.split('::>')[1])["odata.error"].message.value;
+          alert(errorMessage);
+          throw error;
+
+        }
       }
     }
 
+    //Error handling
     const handleError = async (error: any) => {
 
       this.setState({ spinnerIsHidden: true });
@@ -171,9 +174,7 @@ export default class AttachmentsControl extends React.Component<IAttachmentsCont
       }
     }
 
-    console.log("first")
-
-    //Cambiar este JSON que se lea desde un param y aplicarlo al resto del código, que pasa si viene vacio?
+    //Creating string from param object 
     const dataStr =
       Object.keys(this.state.param).length > 0 ?
         JSON.stringify(
@@ -186,20 +187,12 @@ export default class AttachmentsControl extends React.Component<IAttachmentsCont
           }
         ) : '';
 
-    console.log(dataStr)
-
+    let listName: string;   
     const dataJSON = dataStr == '' ? {} : JSON.parse(dataStr);
-
-    console.log(dataJSON)
-
-    const filesLength = this.state.files.length;
-    let listName;
-    console.log("1");
+    const filesLength = this.state.files.length;    
     const list = await sp.web.lists.getById(this.props.library.toString()).expand('RootFolder').select('Title,RootFolder/ServerRelativeUrl').get().then(function (result) {
       listName = result.Title
     });
-    console.log("2");
-
     const path = dataJSON.folder == '' || dataStr == '' ? `/sites/Desarrollo/${listName}/` : `/sites/Desarrollo/${listName}/${dataJSON.folder}`;
     const chunkFileSize = 10485760;
 
@@ -220,7 +213,6 @@ export default class AttachmentsControl extends React.Component<IAttachmentsCont
           success();
         }
         catch (error) {
-          console.log("inside error 9");
           handleError(error);
         }
       } else {
@@ -237,8 +229,8 @@ export default class AttachmentsControl extends React.Component<IAttachmentsCont
           }
           success();
         }
-        catch (e) {
-          handleError(e);
+        catch (error) {
+          handleError(error);
         }
       }
     });
