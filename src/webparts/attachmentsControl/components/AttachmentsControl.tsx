@@ -39,7 +39,7 @@ export default class AttachmentsControl extends React.Component<IAttachmentsCont
 
   public render(): React.ReactElement<IAttachmentsControlProps> {
 
-    console.log("v321");
+    console.log("v327");
     
     //Param sintax sample
     //?meta={"folder": "fotos de mi tia","data": [{"column": "RefID","value":"10"}]}
@@ -110,6 +110,11 @@ export default class AttachmentsControl extends React.Component<IAttachmentsCont
 
     //Show loading spinner
     this.setState({ spinnerIsHidden: false });
+
+    /*
+    *Visual option which switch text with loading spinner without using black cover*
+    this.setState({ spinnerIsHidden: false, textLabel: ''  });
+    */
 
     //Will be executed in case the upload was successful
     const success = () => {
@@ -219,8 +224,8 @@ export default class AttachmentsControl extends React.Component<IAttachmentsCont
         try {
           // large upload
           const newfile = await sp.web.getFolderByServerRelativeUrl(path).files.addChunked(file.name, file, data => {
-            console.log({ data });
           }, true);
+          
           if (!(dataJSON.folder == '' || dataStr == '')) {
             const item = await newfile.file.getItem();
             await item.update({

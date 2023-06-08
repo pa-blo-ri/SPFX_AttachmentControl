@@ -29,14 +29,33 @@
   margin-top: -13px;
   border-radius: 7px;
 }
+/*
+*Visual option which switch text with loading spinner without using black cover*
+.loading-spinner-place{
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  z-index: 6;
+  margin-left: -13px;
+  margin-top: -13px;
+  border-radius: 7px;
+}
+*/
 
 .loading-spinner{
   position: absolute;
   z-index: 6;
   left: 47%;
-  top: 40%;
+  top: 23%;
 }
-
+/*
+*Visual option which switch text with loading spinner without using black cover*
+.loading-spinner{
+  position: absolute;
+  z-index: 6;
+  left: 47%;
+  top: 40%;
+*/
 .welcome {
   text-align: center;
 }

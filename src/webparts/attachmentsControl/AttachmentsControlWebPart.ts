@@ -66,7 +66,7 @@ export default class AttachmentsControlWebPart extends BaseClientSideWebPart<IAt
               groupName: 'Properties',
               groupFields: [
                 PropertyFieldListPicker('library', {
-                  label: "Library",
+                  label: 'Library',
                   selectedList: this.properties.library,
                   orderBy: PropertyFieldListPickerOrderBy.Title,
                   includeHidden: false,
@@ -97,7 +97,7 @@ export default class AttachmentsControlWebPart extends BaseClientSideWebPart<IAt
                 PropertyPaneCheckbox('useLog', {
                 }),                
                 PropertyFieldListPicker('logs_folder', {
-                  label: "Choose a folder to save logs within",
+                  label: 'Choose a folder to save logs within',
                   selectedList: this.properties.logs_folder,
                   orderBy: PropertyFieldListPickerOrderBy.Title,
                   includeHidden: false,
