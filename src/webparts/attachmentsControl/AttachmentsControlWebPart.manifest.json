@@ -11,8 +11,8 @@
   "preconfiguredEntries": [{
     "groupId": "5c03119e-3074-46fd-976b-c60198311f70", 
     "group": { "default": "Other" },
-    "title": { "default": "AttachmentsControl" },
-    "description": { "default": "AttachmentsControl description" },
+    "title": { "default": "Attachments Control" },
+    "description": { "default": "Attachments Control" },
     "officeFabricIconFontName": "Attach",
     "properties": {
       "description": "AttachmentsControl",

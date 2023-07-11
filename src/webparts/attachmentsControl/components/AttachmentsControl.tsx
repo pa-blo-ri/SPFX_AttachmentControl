@@ -1,32 +1,22 @@
 import * as React from 'react';
 import styles from './AttachmentsControl.module.scss';
-
 import { IAttachmentsControlProps } from './IAttachmentsControlProps';
 import { IAttachmentsControlState } from './IAttachmentsControlState';
-
-import { PrimaryButton } from 'office-ui-fabric-react';
+import { IList, PrimaryButton } from 'office-ui-fabric-react';
 import { autobind } from 'office-ui-fabric-react/lib/Utilities';
-
 import { sp } from "@pnp/sp/presets/all";
 import "@pnp/sp/webs";
 import "@pnp/sp/files";
 import "@pnp/sp/folders";
 import "@pnp/sp/lists/web";
-
-
 import { FilePond, registerPlugin } from 'react-filepond';
-import FilePondPluginImageExifOrientation from 'filepond-plugin-image-exif-orientation';
-import FilePondPluginImagePreview from 'filepond-plugin-image-preview';
 import FilePondPluginFileValidateSize from 'filepond-plugin-file-validate-size';
-import 'filepond-plugin-image-preview/dist/filepond-plugin-image-preview.css';
 import 'filepond/dist/filepond.min.css';
 
 export default class AttachmentsControl extends React.Component<IAttachmentsControlProps, IAttachmentsControlState> {
-
   constructor(props: IAttachmentsControlProps, state: IAttachmentsControlState) {
     super(props);
-    sp.setup({ spfxContext: this.props.context });
-
+    sp.setup({ spfxContext: this.props.context });    
     this.state = ({
       files: [],
       param: JSON.parse((new URLSearchParams(document.location.search)).get('meta')) ?? {},
@@ -34,16 +24,13 @@ export default class AttachmentsControl extends React.Component<IAttachmentsCont
       textLabel: this.props.input_text
     });
 
-    registerPlugin(FilePondPluginImageExifOrientation, FilePondPluginImagePreview, FilePondPluginFileValidateSize);
+    registerPlugin(FilePondPluginFileValidateSize);
   }
 
   public render(): React.ReactElement<IAttachmentsControlProps> {
-
-    console.log("v327");
-    
     //Param sintax sample
     //?meta={"folder": "fotos de mi tia","data": [{"column": "RefID","value":"10"}]}
-  
+
     const attachs = (e) => this.props.max_file_size <= (e.size / 1e+6);
     let buttonIsHidden = this.state.files.some(attachs) || this.state.files.length < 1;
 
@@ -90,9 +77,8 @@ export default class AttachmentsControl extends React.Component<IAttachmentsCont
           maxFiles={this.props.max_files}
           labelIdle={this.state.textLabel}
           onupdatefiles={fileItems => {
-            this.setState({
-              files: fileItems.map(fileItem => fileItem.file)
-            });
+            window.parent.postMessage(`FILES_UPDATE||${ fileItems.length }`, '*');
+            this.setState({ files: fileItems.map(fileItem => fileItem.file) });
           }}
         />
         <div hidden={buttonIsHidden}>
@@ -107,31 +93,18 @@ export default class AttachmentsControl extends React.Component<IAttachmentsCont
 
   @autobind
   private async _uploadFiles() {
-
-    //Show loading spinner
     this.setState({ spinnerIsHidden: false });
 
-    /*
-    *Visual option which switch text with loading spinner without using black cover*
-    this.setState({ spinnerIsHidden: false, textLabel: ''  });
-    */
-
-    //Will be executed in case the upload was successful
+    // Will be executed in case the upload was successful
     const success = () => {
-
       this.setState({ spinnerIsHidden: true, textLabel: this.props.input_text_success });
-      setTimeout(() => {
-        this.setState({ textLabel: this.props.input_text });
-      }, 3000);
-
+      setTimeout(() => { this.setState({ textLabel: this.props.input_text }); }, 3000);
     }
 
-    //Send log file in case an error has ocurred
+    // Send log file in case an error has ocurred
     const sendLog = async (code: string, description: string) => {
       try {
-
         if (this.props.useLog && this.props.logs_folder != '') {
-
           let logList: string;
           await sp.web.lists.getById(this.props.logs_folder.toString()).expand('RootFolder').select('Title,RootFolder/ServerRelativeUrl').get().then(function (result) {
             logList = result.Title
@@ -145,75 +118,61 @@ export default class AttachmentsControl extends React.Component<IAttachmentsCont
           });
         }
       } catch (error) {
-        if ( typeof error.response !== 'undefined' && typeof error.response.data !== 'undefined' && error.response.data !== null ) {
-
+        if (typeof error.response !== 'undefined' && typeof error.response.data !== 'undefined' && error.response.data !== null) {
           throw new Error(error.response.data);
-
         } else {
-
           let errorMessage = JSON.parse(error.message.split('::>')[1])["odata.error"].message.value;
-          alert(errorMessage);
+          console.log(errorMessage);
           throw error;
-
         }
       }
     }
 
-    //Error handling
+    // Error handling
     const handleError = async (error: any) => {
-
       this.setState({ spinnerIsHidden: true });
-
-      if (typeof error.response !== 'undefined' && typeof error.response.data !== 'undefined' && error.response.data !== null) {
-
+      console.log(error);
+      if (typeof error.response !== 'undefined' && typeof error.response.data !== 'undefined' && error.response.data !== null) {        
         throw new Error(error.response.data);
       } else {
-
         let entireError = String(error);
         let errorMessage = JSON.parse(error.message.split('::>')[1])["odata.error"].message.value;
-
-        alert(errorMessage);
+        console.log(errorMessage);
         sendLog(entireError, errorMessage);
-
         throw error;
       }
     }
 
-    //Creating string from param object 
-    const dataStr =
-      Object.keys(this.state.param).length > 0 ?
-        JSON.stringify(
-          {
-            folder: this.state.param['folder'],
-            data: [{
-              column: this.state.param['data'][0]['column'] ?? '',
-              value: this.state.param['data'][0]['value'] ?? ''
-            }]
-          }
-        ) : '';
-
-    let listName: string;   
-    const dataJSON = dataStr == '' ? {} : JSON.parse(dataStr);
-    const filesLength = this.state.files.length;    
-    const list = await sp.web.lists.getById(this.props.library.toString()).expand('RootFolder').select('Title,RootFolder/ServerRelativeUrl').get().then(function (result) {
-      listName = result.Title
-    });
-    const path = dataJSON.folder == '' || dataStr == '' ? `/sites/Desarrollo/${listName}/` : `/sites/Desarrollo/${listName}/${dataJSON.folder}`;
+    // Creating string from param object 
+    const dataStr = Object.keys(this.state.param).length > 0 ?
+      JSON.stringify(
+        {
+          folder: this.state.param['folder'],
+          data: [{
+            column: this.state.param['data'][0]['column'] ?? '',
+            value: this.state.param['data'][0]['value'] ?? ''
+          }]
+        }
+      ) : 
+    '';
+    
+    let listId: string = this.props.library.toString();
+    let list = sp.web.lists.getById(listId);
+    let listName: string = (await list.select("Title")()).Title;    
+    const dataJSON = dataStr === '' ? {} : JSON.parse(dataStr);
+    const siteUrl = '';
+    const path = dataJSON.folder === undefined || dataJSON.folder === '' ? `${siteUrl}${listName}/` : `${siteUrl}${listName}/${dataJSON.folder}`;
     const chunkFileSize = 10485760;
 
     this.state.files.forEach(async (file, i) => {
-
-      // you can adjust this number to control what size files are uploaded in chunks editing var chunkFileSize 
       if (file.size <= chunkFileSize) {
         try {
-          // small upload  
+          // Small upload
           const newfile = await sp.web.getFolderByServerRelativeUrl(path).files.add(file.name, file, true);
 
-          if (!(dataJSON.folder == '' || dataStr == '')) {
+          if (!(dataJSON.folder === '' || dataStr === '')) {
             const item = await newfile.file.getItem();
-            await item.update({
-              [dataJSON.data[0].column]: dataJSON.data[0].value
-            });
+            await item.update({ [dataJSON.data[0].column]: dataJSON.data[0].value });
           }
           success();
         }
@@ -222,16 +181,14 @@ export default class AttachmentsControl extends React.Component<IAttachmentsCont
         }
       } else {
         try {
-          // large upload
-          const newfile = await sp.web.getFolderByServerRelativeUrl(path).files.addChunked(file.name, file, data => {
-          }, true);
-          
-          if (!(dataJSON.folder == '' || dataStr == '')) {
+          // Large upload
+          const newfile = await sp.web.getFolderByServerRelativeUrl(path).files.addChunked(file.name, file, data => { }, true);
+
+          if (!(dataJSON.folder === '' || dataStr === '')) {
             const item = await newfile.file.getItem();
-            await item.update({
-              [dataJSON.data[0].column]: dataJSON.data[0].value
-            });
+            await item.update({ [dataJSON.data[0].column]: dataJSON.data[0].value });
           }
+
           success();
         }
         catch (error) {
@@ -239,6 +196,7 @@ export default class AttachmentsControl extends React.Component<IAttachmentsCont
         }
       }
     });
+    
     this.setState({ files: [] });
   }
 }

@@ -2,7 +2,8 @@
 
 .attachmentsControl {
   overflow: hidden;
-  padding: 1em;
+  padding: 0 !important;
+  margin: 0 !important;
   color: "[theme:bodyText, default: #323130]";
   color: var(--bodyText);
   &.teams {
@@ -78,3 +79,10 @@
     }
   }
 }
+
+:global #spSiteHeader { display: none; }
+:global #spLeftNav { display: none; }
+:global #CommentsWrapper { display: none; }
+:global div[data-automation-id="pageHeader"] { display: none; }
+:global .ControlZone { margin: 0 !important; padding: 0 !important;}
+:global div { max-width: 100% !important; }

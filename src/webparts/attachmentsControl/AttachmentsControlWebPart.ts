@@ -1,13 +1,9 @@
 import * as React from 'react';
 import * as ReactDom from 'react-dom';
 import { Version } from '@microsoft/sp-core-library';
-import { IPropertyPaneConfiguration, PropertyPaneTextField, PropertyPaneCheckbox, PropertyPaneLabel} from '@microsoft/sp-property-pane';
+import { IPropertyPaneConfiguration, PropertyPaneTextField, PropertyPaneCheckbox, PropertyPaneLabel } from '@microsoft/sp-property-pane';
 import { PropertyFieldListPicker, PropertyFieldListPickerOrderBy } from '@pnp/spfx-property-controls/lib/PropertyFieldListPicker';
-
 import { BaseClientSideWebPart } from '@microsoft/sp-webpart-base';
-import { IReadonlyTheme } from '@microsoft/sp-component-base';
-
-import * as strings from 'AttachmentsControlWebPartStrings';
 import AttachmentsControl from './components/AttachmentsControl';
 import { IAttachmentsControlProps } from './components/IAttachmentsControlProps';
 
@@ -23,12 +19,10 @@ export interface IAttachmentsControlWebPartProps {
   button_text: string;
   singleListFiltered: string;
   useLog: boolean;
-  logs_folder: string | string []; //Stores de list ID to save log file
+  logs_folder: string | string[]; //Stores de list ID to save log file
 }
 
 export default class AttachmentsControlWebPart extends BaseClientSideWebPart<IAttachmentsControlWebPartProps> {
-
-
   public render(): void {
     const element: React.ReactElement<IAttachmentsControlProps> = React.createElement(AttachmentsControl,
       {
@@ -74,7 +68,7 @@ export default class AttachmentsControlWebPart extends BaseClientSideWebPart<IAt
                   properties: this.properties,
                   context: this.context,
                   deferredValidationTime: 0,
-                  key: 'listId'                  
+                  key: 'listId'
                 }),
                 PropertyPaneTextField('max_file_size', {
                   label: 'Max file size (MB)'
@@ -95,7 +89,7 @@ export default class AttachmentsControlWebPart extends BaseClientSideWebPart<IAt
                   text: 'Send log?'
                 }),
                 PropertyPaneCheckbox('useLog', {
-                }),                
+                }),
                 PropertyFieldListPicker('logs_folder', {
                   label: 'Choose a folder to save logs within',
                   selectedList: this.properties.logs_folder,
@@ -106,7 +100,7 @@ export default class AttachmentsControlWebPart extends BaseClientSideWebPart<IAt
                   context: this.context,
                   deferredValidationTime: 0,
                   key: 'listIdLog',
-                  disabled: !this.properties.useLog                  
+                  disabled: !this.properties.useLog
                 })
               ]
             }
