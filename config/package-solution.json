@@ -3,7 +3,7 @@
   "solution": {
     "name": "sdge-webparts-attachments-client-side-solution",
     "id": "f19cc110-014e-42d7-9d53-b8676be8a210",
-    "version": "1.0.0.36",
+    "version": "1.0.0.44",
     "includeClientSideAssets": true,
     "skipFeatureDeployment": true,
     "isDomainIsolated": false,
