@@ -21,7 +21,8 @@ export default class AttachmentsControl extends React.Component<IAttachmentsCont
       files: [],
       param: JSON.parse((new URLSearchParams(document.location.search)).get('meta')) ?? {},
       spinnerIsHidden: true,
-      textLabel: this.props.input_text
+      textLabel: this.props.input_text,
+      filenameError: false
     });
 
     registerPlugin(FilePondPluginFileValidateSize);
@@ -29,10 +30,14 @@ export default class AttachmentsControl extends React.Component<IAttachmentsCont
 
   public render(): React.ReactElement<IAttachmentsControlProps> {
     //Param sintax sample
-    //?meta={"folder": "fotos de mi tia","data": [{"column": "RefID","value":"10"}]}
+    //?meta={"folder": "fotos de mi tia", "filename": "*TL200-Z2000*", "data": [{"column": "RefID","value":"10"}]}
 
     const attachs = (e) => this.props.max_file_size <= (e.size / 1e+6);
-    let buttonIsHidden = this.state.files.some(attachs) || this.state.files.length < 1;
+    let buttonIsHidden = this.state.files.some(attachs) || this.state.files.length < 1 || this.state.filenameError;
+
+    setTimeout(function() {
+      window.parent.postMessage(`COMPONENT_LOADED`, '*');
+    }, 500);
 
     return (
       <div className={styles.attachmentsControl}>
@@ -71,14 +76,76 @@ export default class AttachmentsControl extends React.Component<IAttachmentsCont
           </svg>
         </div>
         <FilePond
-          files={this.state.files}
-          allowMultiple={true}
-          maxFileSize={this.props.max_file_size * 1e+6}
-          maxFiles={this.props.max_files}
-          labelIdle={this.state.textLabel}
-          onupdatefiles={fileItems => {
+          files = { this.state.files }
+          allowMultiple = { true }
+          maxFileSize = { this.props.max_file_size * 1e+6 }
+          maxFiles = { this.props.max_files }
+          labelIdle = { this.state.textLabel }
+          labelFileProcessingComplete = { '' }
+          labelFileProcessing = { '' }
+          labelFileProcessingAborted = { '' }
+          labelTapToCancel = { '' }
+          labelTapToRetry = { '' }
+          onremovefile = {
+            (error, file) => {
+              this.setState({ filenameError: document.querySelectorAll('li[data-filepond-item-state="processing-error"]').length > 0 });
+              console.log("file removed", document.querySelectorAll('li[data-filepond-item-state="processing-error"]').length > 0)
+              const that = this;
+              setTimeout(function() {
+                that.setState({ filenameError: document.querySelectorAll('li[data-filepond-item-state="processing-error"]').length > 0 });
+                console.log("file removed 2", document.querySelectorAll('li[data-filepond-item-state="processing-error"]').length > 0)
+              }, 500);
+            }
+          }
+          server = { 
+            {
+              process: (fieldName, file, metadata, load, error, progress, abort) => {
+                const filenameComparison = this.state.param["filename"];
+                if (filenameComparison !== undefined && filenameComparison !== null && filenameComparison !== "") {
+                  var result = this.matchRuleShort(file.name, filenameComparison);
+                  var that = this;
+                  if (!result) {
+                    error(file.name);
+                    setTimeout(function() {
+                      var errorfiles = document.querySelectorAll('li[data-filepond-item-state="processing-error"] legend');
+                      errorfiles.forEach(f => {
+                        var error_filename = f.innerHTML;
+                        if (error_filename === file.name) {
+                          var liNode = f.parentNode.parentNode;
+                          if (liNode.querySelector(".filepond--file-status-main")) {
+                            liNode.querySelector(".filepond--file-status-main").innerHTML = "Incorrect filename, it should start with " + filenameComparison.replaceAll("*", "")
+                            liNode.querySelector(".filepond--action-process-item").remove();
+                            liNode.querySelector(".filepond--file-status-sub").remove();
+                          }                          
+                        }
+                      });
+
+                      that.setState({ filenameError: document.querySelectorAll('li[data-filepond-item-state="processing-error"]').length > 0 });
+                      console.log(that.state.filenameError, document.querySelectorAll('li[data-filepond-item-state="processing-error"]'));
+                    }, 150)                    
+                  } else {
+                    abort(file.name)
+                    setTimeout(function() {
+                      var okfiles = document.querySelectorAll('li[data-filepond-item-state="cancelled"]');
+                      okfiles.forEach(f => {
+                        if (f.querySelector(".filepond--file-status-main")) {
+                          f.querySelector(".filepond--file-status-main").remove()
+                          f.querySelector(".filepond--action-retry-item-processing").remove();
+                          f.querySelector(".filepond--file-status-sub").remove();
+                        }                        
+                      });
+
+                      that.setState({ filenameError: document.querySelectorAll('li[data-filepond-item-state="processing-error"]').length > 0 });
+                    }, 150);
+                  }                                    
+                }                
+              }
+            }
+          }
+          onupdatefiles={ fileItems => {
             window.parent.postMessage(`FILES_UPDATE||${ fileItems.length }`, '*');
             this.setState({ files: fileItems.map(fileItem => fileItem.file) });
+            this.setState({ filenameError: document.querySelectorAll('li[data-filepond-item-state="processing-error"]').length > 0 });
           }}
         />
         <div hidden={buttonIsHidden}>
@@ -91,12 +158,18 @@ export default class AttachmentsControl extends React.Component<IAttachmentsCont
     );
   }
 
+  private matchRuleShort(str, rule) {
+    var escapeRegex = (str) => str.replace(/([.*+?^=!:${}()|\[\]\/\\])/g, "\\$1");
+    return new RegExp("^" + rule.split("*").map(escapeRegex).join(".*") + "$").test(str);
+  }
+
   @autobind
   private async _uploadFiles() {
     this.setState({ spinnerIsHidden: false });
 
     // Will be executed in case the upload was successful
     const success = () => {
+      console.log("success called")
       this.setState({ spinnerIsHidden: true, textLabel: this.props.input_text_success });
       setTimeout(() => { this.setState({ textLabel: this.props.input_text }); }, 3000);
     }
@@ -163,6 +236,8 @@ export default class AttachmentsControl extends React.Component<IAttachmentsCont
     const siteUrl = '';
     const path = dataJSON.folder === undefined || dataJSON.folder === '' ? `${siteUrl}${listName}/` : `${siteUrl}${listName}/${dataJSON.folder}`;
     const chunkFileSize = 10485760;
+    let filesUploaded = 0;
+    const totalFiles = this.state.files.length;
 
     this.state.files.forEach(async (file, i) => {
       if (file.size <= chunkFileSize) {
@@ -174,7 +249,11 @@ export default class AttachmentsControl extends React.Component<IAttachmentsCont
             const item = await newfile.file.getItem();
             await item.update({ [dataJSON.data[0].column]: dataJSON.data[0].value });
           }
-          success();
+          filesUploaded += 1;          
+          console.log("filesUploaded", filesUploaded, totalFiles)
+          if (filesUploaded >= totalFiles) {
+            success();
+          }          
         }
         catch (error) {
           handleError(error);
@@ -182,14 +261,21 @@ export default class AttachmentsControl extends React.Component<IAttachmentsCont
       } else {
         try {
           // Large upload
-          const newfile = await sp.web.getFolderByServerRelativeUrl(path).files.addChunked(file.name, file, data => { }, true);
+          const formIdColumn = dataJSON.data[0].column;
+          const formId = dataJSON.data[0].value;
+          const filename = `${formId}-${file.name}`;
+          const newfile = await sp.web.getFolderByServerRelativeUrl(path).files.addChunked(filename, file, data => { }, true);
 
           if (!(dataJSON.folder === '' || dataStr === '')) {
             const item = await newfile.file.getItem();
-            await item.update({ [dataJSON.data[0].column]: dataJSON.data[0].value });
+            await item.update({ [formIdColumn]: formId, FileName: file.name });
           }
 
-          success();
+          filesUploaded += 1;
+          console.log("filesUploaded", filesUploaded, totalFiles)
+          if (filesUploaded >= totalFiles) {
+            success();
+          } 
         }
         catch (error) {
           handleError(error);

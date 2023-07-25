@@ -3,4 +3,5 @@ export interface IAttachmentsControlState {
     spinnerIsHidden: boolean;
     files: any[];
     param: object;
+    filenameError: boolean;
   }

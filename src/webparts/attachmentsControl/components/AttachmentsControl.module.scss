@@ -86,3 +86,5 @@
 :global div[data-automation-id="pageHeader"] { display: none; }
 :global .ControlZone { margin: 0 !important; padding: 0 !important;}
 :global div { max-width: 100% !important; }
+:global .filepond--action-retry-item-processing { display: none !important; }
+:global .filepond--action-process-item { display: none !important; }
