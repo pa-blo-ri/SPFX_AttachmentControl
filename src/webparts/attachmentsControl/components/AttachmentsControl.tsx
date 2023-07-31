@@ -86,6 +86,7 @@ export default class AttachmentsControl extends React.Component<IAttachmentsCont
           labelFileProcessingAborted = { '' }
           labelTapToCancel = { '' }
           labelTapToRetry = { '' }
+          maxParallelUploads = { 5 }
           onremovefile = {
             (error, file) => {
               this.setState({ filenameError: document.querySelectorAll('li[data-filepond-item-state="processing-error"]').length > 0 });
@@ -124,6 +125,7 @@ export default class AttachmentsControl extends React.Component<IAttachmentsCont
                       console.log(that.state.filenameError, document.querySelectorAll('li[data-filepond-item-state="processing-error"]'));
                     }, 150)                    
                   } else {
+                    console.log(file.name, "<<<<<<<<<<<<<<<")
                     abort(file.name)
                     setTimeout(function() {
                       var okfiles = document.querySelectorAll('li[data-filepond-item-state="cancelled"]');
@@ -240,13 +242,11 @@ export default class AttachmentsControl extends React.Component<IAttachmentsCont
       JSON.stringify(
         {
           folder: this.state.param['folder'],
-          data: [{
-            column: this.state.param['data'][0]['column'] ?? '',
-            value: this.state.param['data'][0]['value'] ?? ''
-          }]
+          data: this.state.param['data']
         }
       ) : 
     '';
+
     console.log("2", dataStr)
     
     let listId: string = this.props.library.toString();
@@ -273,7 +273,11 @@ export default class AttachmentsControl extends React.Component<IAttachmentsCont
           if (dataJSON.data !== undefined) {
             const formIdColumn = dataJSON.data[0].column;
             const item = await newfile.file.getItem();
-            await item.update({ [formIdColumn]: formId, FileName: file.name });
+            
+            let updates = { FileName: file.name  };
+            dataJSON.data.forEach(e => { updates[e.column] = e.value });
+            console.log("updates>>>> ", updates);
+            await item.update(updates);
           }
           filesUploaded += 1;
           if (filesUploaded >= totalFiles) {
@@ -297,9 +301,12 @@ export default class AttachmentsControl extends React.Component<IAttachmentsCont
           }, true);
 
           if (dataJSON.data !== undefined) {
-            const formIdColumn = dataJSON.data[0].column;
+            const formIdColumn = dataJSON.data[0].column;  // [formIdColumn]: formId,
             const item = await newfile.file.getItem();
-            await item.update({ [formIdColumn]: formId, FileName: file.name });
+            let updates = { FileName: file.name  };
+            dataJSON.data.forEach(e => { updates[e.column] = e.value });
+            console.log("updates>>>> ", updates);
+            await item.update(updates);
           }
 
           filesUploaded += 1;
