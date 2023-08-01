@@ -174,9 +174,11 @@ export default class AttachmentsControl extends React.Component<IAttachmentsCont
     );
   }
 
-  private matchRuleShort(str, rule) {
-    var escapeRegex = (str) => str.replace(/([.*+?^=!:${}()|\[\]\/\\])/g, "\\$1");
-    return new RegExp("^" + rule.split("*").map(escapeRegex).join(".*") + "$").test(str);
+  private matchRuleShort(str: string, rule: string) {
+    var low_str = str.toLowerCase();
+    var low_rule = rule.toLowerCase();
+    var escapeRegex = (low_str: string) => low_str.replace(/([.*+?^=!:${}()|\[\]\/\\])/g, "\\$1");
+    return new RegExp("^" + low_rule.split("*").map(escapeRegex).join(".*") + "$").test(low_str);
   }
 
   @autobind
@@ -185,7 +187,6 @@ export default class AttachmentsControl extends React.Component<IAttachmentsCont
 
     // Will be executed in case the upload was successful
     const success = () => {
-      console.log("success called");
       window.parent.postMessage(`FILES_UPDATE||0`, '*');
       this.setState({ spinnerIsHidden: true, textLabel: this.props.input_text_success });
       setTimeout(() => { 
@@ -235,8 +236,7 @@ export default class AttachmentsControl extends React.Component<IAttachmentsCont
         throw error;
       }
     }
-
-    console.log("1")
+  
     // Creating string from param object 
     const dataStr = Object.keys(this.state.param).length > 0 ?
       JSON.stringify(
@@ -246,8 +246,6 @@ export default class AttachmentsControl extends React.Component<IAttachmentsCont
         }
       ) : 
     '';
-
-    console.log("2", dataStr)
     
     let listId: string = this.props.library.toString();
     let list = sp.web.lists.getById(listId);
@@ -276,7 +274,6 @@ export default class AttachmentsControl extends React.Component<IAttachmentsCont
             
             let updates = { FileName: file.name  };
             dataJSON.data.forEach(e => { updates[e.column] = e.value });
-            console.log("updates>>>> ", updates);
             await item.update(updates);
           }
           filesUploaded += 1;
