@@ -35,6 +35,7 @@ export default class AttachmentsControl extends React.Component<IAttachmentsCont
     const attachs = (e) => this.props.max_file_size <= (e.size / 1e+6);
     let buttonIsHidden = this.state.files.some(attachs) || this.state.files.length < 1 || this.state.filenameError;
 
+    console.log("1.0.0.58");
     setTimeout(function() {
       window.parent.postMessage(`COMPONENT_LOADED`, '*');
     }, 500);
@@ -266,15 +267,26 @@ export default class AttachmentsControl extends React.Component<IAttachmentsCont
             formId = dataJSON.data[0].value;           
             filename = `${formId}-${file.name}`;
           }
+                    
           const newfile = await sp.web.getFolderByServerRelativeUrl(path).files.add(filename, file, true);
+          if (dataJSON.data !== undefined) {                        
 
-          if (dataJSON.data !== undefined) {
-            const formIdColumn = dataJSON.data[0].column;
-            const item = await newfile.file.getItem();
-            
+            console.log("!!!3.1", newfile.data.ServerRelativeUrl);
+
+            const file2 = await sp.web.getFileByServerRelativeUrl(newfile.data.ServerRelativeUrl).getItem();
+            console.log("File details:", file2);
+
+           // const item = await newfile.file.getItem();
+
+            //console.log("4", item);
             let updates = { FileName: file.name  };
+            //console.log("5", updates, item["ID"]);
             dataJSON.data.forEach(e => { updates[e.column] = e.value });
-            await item.update(updates);
+            //await item.update(updates);
+            //await list.items.getById(item["ID"]).update(updates);
+            file2.update(updates);
+
+            console.log("6");
           }
           filesUploaded += 1;
           if (filesUploaded >= totalFiles) {
