@@ -35,7 +35,7 @@ export default class AttachmentsControl extends React.Component<IAttachmentsCont
     const attachs = (e) => this.props.max_file_size <= (e.size / 1e+6);
     let buttonIsHidden = this.state.files.some(attachs) || this.state.files.length < 1 || this.state.filenameError;
 
-    console.log("1.0.0.58");
+    console.log("1.0.0.59");
     setTimeout(function() {
       window.parent.postMessage(`COMPONENT_LOADED`, '*');
     }, 500);
@@ -104,8 +104,11 @@ export default class AttachmentsControl extends React.Component<IAttachmentsCont
               process: (fieldName, file, metadata, load, error, progress, abort) => {
                 const filenameComparison = this.state.param["filename"];
                 const that = this;
+
+                var isInvalidName = (new RegExp('[~#%\&{}+\|]|\\.\\.|^\\.|\\.$\\.?')).test(file.name);
+               
                 if (filenameComparison !== undefined && filenameComparison !== null && filenameComparison !== "") {
-                  var result = this.matchRuleShort(file.name, filenameComparison);                  
+                  var result = this.matchRuleShort(file.name, filenameComparison) && !isInvalidName;                  
                   if (!result) {
                     error(file.name);
                     setTimeout(function() {
@@ -115,7 +118,11 @@ export default class AttachmentsControl extends React.Component<IAttachmentsCont
                         if (error_filename === file.name) {
                           var liNode = f.parentNode.parentNode;
                           if (liNode.querySelector(".filepond--file-status-main")) {
-                            liNode.querySelector(".filepond--file-status-main").innerHTML = "Incorrect filename, it should start with " + filenameComparison.replaceAll("*", "")
+                            if (isInvalidName) {
+                              liNode.querySelector(".filepond--file-status-main").innerHTML = "Invalid characters on filename, make sure it don't contains #'{}$%? u other invalid characters."
+                            } else {
+                              liNode.querySelector(".filepond--file-status-main").innerHTML = "Incorrect filename, it should start with " + filenameComparison.replaceAll("*", "")
+                            }                            
                             liNode.querySelector(".filepond--action-process-item").remove();
                             liNode.querySelector(".filepond--file-status-sub").remove();
                           }                          
@@ -254,10 +261,10 @@ export default class AttachmentsControl extends React.Component<IAttachmentsCont
     const dataJSON = dataStr === '' ? {} : JSON.parse(dataStr);
     const siteUrl = '';
     const path = dataJSON.folder === undefined || dataJSON.folder === '' ? `${siteUrl}${listName}/` : `${siteUrl}${listName}/${dataJSON.folder}`;
-    const chunkFileSize = 10485760;
+    const chunkFileSize = 50485760;
     let filesUploaded = 0;
     const totalFiles = this.state.files.length;    
-    this.state.files.forEach(async (file, i) => {      
+    this.state.files.forEach(async (file, i) => { 
       if (file.size <= chunkFileSize) {
         try {
           // Small upload
@@ -269,21 +276,11 @@ export default class AttachmentsControl extends React.Component<IAttachmentsCont
           }
                     
           const newfile = await sp.web.getFolderByServerRelativeUrl(path).files.add(filename, file, true);
-          if (dataJSON.data !== undefined) {                        
-
-            console.log("!!!3.1", newfile.data.ServerRelativeUrl);
-
+          if (dataJSON.data !== undefined) {
+            console.log("SMALL UPLOAD !!!3.2", newfile.data.ServerRelativeUrl);
             const file2 = await sp.web.getFileByServerRelativeUrl(newfile.data.ServerRelativeUrl).getItem();
-            console.log("File details:", file2);
-
-           // const item = await newfile.file.getItem();
-
-            //console.log("4", item);
-            let updates = { FileName: file.name  };
-            //console.log("5", updates, item["ID"]);
-            dataJSON.data.forEach(e => { updates[e.column] = e.value });
-            //await item.update(updates);
-            //await list.items.getById(item["ID"]).update(updates);
+            let updates = { FileName: file.name  };        
+            dataJSON.data.forEach(e => { updates[e.column] = e.value });            
             file2.update(updates);
 
             console.log("6");
@@ -298,6 +295,7 @@ export default class AttachmentsControl extends React.Component<IAttachmentsCont
         }
       } else {
         try {
+          console.log(".........LARGE UPLOAD..........");
           // Large upload
           let filename = file.name;
           let formId = "";
@@ -305,18 +303,24 @@ export default class AttachmentsControl extends React.Component<IAttachmentsCont
             formId = dataJSON.data[0].value;           
             filename = `${formId}-${file.name}`;          
           }          
-                   
-          const newfile = await sp.web.getFolderByServerRelativeUrl(path).files.addChunked(filename, file, data => {
-          }, true);
+                             
+          const temp_path = `${siteUrl}${listName}/`;
+          console.log("!3", temp_path);
+          const newfile = await sp.web.getFolderByServerRelativeUrl(temp_path).files.addChunked(filename, file, data => {}, true);
+          console.log("4");
 
           if (dataJSON.data !== undefined) {
-            const formIdColumn = dataJSON.data[0].column;  // [formIdColumn]: formId,
-            const item = await newfile.file.getItem();
+            console.log("LARGE UPLOAD !!!3.2", newfile.data.ServerRelativeUrl);
+            const file2 = await sp.web.getFileByServerRelativeUrl(newfile.data.ServerRelativeUrl).getItem();
             let updates = { FileName: file.name  };
             dataJSON.data.forEach(e => { updates[e.column] = e.value });
             console.log("updates>>>> ", updates);
-            await item.update(updates);
+            await file2.update(updates);
           }
+
+          var finalPath = newfile.data.ServerRelativeUrl.replace(`ProjectsDocuments`, path) 
+          console.log(">>>", {finalPath});
+          await sp.web.getFileByServerRelativePath(newfile.data.ServerRelativeUrl).moveByPath(finalPath, true, false);
 
           filesUploaded += 1;
           console.log("filesUploaded", filesUploaded, totalFiles)
